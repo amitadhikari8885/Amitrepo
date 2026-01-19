@@ -1,2 +1,1 @@
-# Amitrepo
-A publu
+A public repo fo Amit Adhikari
