@@ -10,11 +10,36 @@
 
 Welcome to **Advanced Phishing Detector** - a cutting-edge cybersecurity tool designed to combat sophisticated phishing attacks. Built for ethical hackers, security researchers, and cybersecurity enthusiasts, this suite provides unparalleled insight into malicious web content.
 
+## � Table of Contents
+
+- [🚀 Quick Start](#-quick-start)
+- [🎯 Core Features](#-core-features)
+- [📊 Technical Architecture](#-technical-architecture)
+- [🏆 What Sets Us Apart](#-what-sets-advanced-phishing-detector-apart)
+- [📖 Usage Guide](#-usage-guide)
+- [🔬 Detection Engine Details](#-detection-engine-details)
+- [🛠️ Project Structure](#️-project-structure)
+- [🧪 Development](#-development)
+- [🎓 Educational Value](#-educational-value)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+- [⚠️ Disclaimer](#️-disclaimer)
+- [📞 Contact & Support](#-contact--support)
+
+## ✨ Latest Updates
+
+### Version Highlights
+- **Professional Architecture**: Complete codebase restructuring with modular design
+- **Enhanced Build System**: Automated build pipelines with cross-platform support
+- **Comprehensive Testing**: Full test coverage with Jest framework
+- **Code Quality**: ESLint and Prettier integration for consistent standards
+- **Documentation**: Professional README with detailed usage guides and API documentation
+
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 16+ and npm
-- Modern web browser
+- Modern web browser with JavaScript enabled
 
 ### Installation
 ```bash
@@ -156,22 +181,25 @@ advanced-phishing-detector/
 ├── src/                          # Source code
 │   ├── css/
 │   │   └── styles.css           # Application styles
-│   ├── js/
-│   │   └── detector.js          # Core detection logic
-│   └── assets/                  # Static assets
+│   └── js/
+│       └── detector.js          # Core detection logic
 ├── tests/                        # Test files
 │   └── detector.test.js         # Unit tests
 ├── scripts/                      # Build scripts
-│   └── build.ps1                # Build automation
+│   ├── build.js                 # JavaScript build automation
+│   └── build.ps1                # PowerShell build automation
 ├── dist/                         # Built application (generated)
-├── phishing-detector.html        # Main application
-├── index.html                    # Demo login page
-├── ceh-plan.yml                  # CEH study roadmap
+│   ├── index.html               # Main application entry point
+│   ├── src/                     # Built source files
+│   ├── package.json             # Built package configuration
+│   └── README.md                # Built documentation
+├── phishing-detector.html        # Development HTML file
 ├── package.json                  # Node.js configuration
 ├── jest.config.js                # Test configuration
 ├── eslint.config.js              # Linting configuration
-├── .prettierrc                   # Code formatting
+├── .prettierrc                   # Code formatting rules
 ├── .gitignore                    # Git ignore rules
+├── Makefile                      # Additional build automation
 ├── LICENSE                       # MIT license
 ├── CONTRIBUTING.md               # Contribution guidelines
 └── README.md                     # This documentation
@@ -264,14 +292,24 @@ This tool is designed for **educational and ethical security research purposes o
 
 ## 📞 Contact & Support
 
-**Amit Adhikari** - Cybersecurity Enthusiast & CEH Candidate
-
+**Project Information**
+- **Author**: Amit Adhikari
 - **GitHub**: [@amitadhikari8885](https://github.com/amitadhikari8885)
-- **Project Repository**: [Amitrepo](https://github.com/amitadhikari8885/Amitrepo)
-- **Issues**: [GitHub Issues](https://github.com/amitadhikari8885/Amitrepo/issues)
+- **Repository**: [Advanced Phishing Detector](https://github.com/amitadhikari8885/Amitrepo)
+- **Issues**: [Report Bugs & Request Features](https://github.com/amitadhikari8885/Amitrepo/issues)
+- **Discussions**: [Community Discussions](https://github.com/amitadhikari8885/Amitrepo/discussions)
+
+**Professional Background**
+- Cybersecurity Enthusiast & Ethical Hacker
+- CEH (Certified Ethical Hacker) Candidate
+- Focus: Web Application Security & Threat Detection
 
 ---
 
-**"Security is not a product, but a process."** - Bruce Schneier
+**"The best defense is a good offense."** - Cybersecurity Proverb
 
 *Built with ❤️ for the cybersecurity community* 🛡️
+
+---
+
+*Last updated: January 26, 2026*
