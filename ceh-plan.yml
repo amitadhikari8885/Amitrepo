@@ -1,0 +1,55 @@
+my-learning:
+  - title: "Certified Ethical Hacker (CEH) Preparation"
+    description: "A comprehensive plan to prepare for the Certified Ethical Hacker (CEH) certification."
+    duration: "3 months"
+    resources:
+      - name: "Official CEH Study Guide"
+        type: "Book"
+        link: "https://www.eccouncil.org/programs/certified-ethical-hacker-ceh/"
+      - name: "CEH Practice Exams"
+        type: "Online Resource"
+        link: "https://www.exam-labs.com/exam/312-50-CEH"
+      - name: "Ethical Hacking Labs"
+        type: "Hands-on Labs"
+        link: "https://www.hackthebox.eu/"
+    weekly-plan:
+      - week: 1
+        topics:
+          - "Introduction to Ethical Hacking"
+          - "Footprinting and Reconnaissance"
+      - week: 2
+        topics:
+          - "Scanning Networks"
+          - "Enumeration Techniques"
+      - week: 3
+        topics:
+          - "System Hacking"
+          - "Malware Threats"
+      - week: 4
+        topics:
+          - "Sniffing and Social Engineering"
+          - "Denial of Service Attacks"
+      - week: 5
+        topics:
+          - "Session Hijacking"
+          - "Hacking Web Servers"
+      - week: 6
+        topics:
+          - "Hacking Web Applications"
+          - "SQL Injection"
+      - week: 7
+        topics:
+          - "Hacking Wireless Networks"
+          - "Evading IDS, Firewalls, and Honeypots"
+      - week: 8
+        topics:
+          - "Cryptography Basics"
+          - "Cloud Computing Security"
+      - week: 9
+        topics:
+          - "Mobile Device Hacking"
+          - "IoT Hacking Fundamentals"
+      - week: 10
+        topics:
+          - "Review and Practice Exams"
+          - "Final Preparations for CEH Exam"

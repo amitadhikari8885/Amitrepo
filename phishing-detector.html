@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Phishing URL Detector</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      padding: 40px 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      width: 100%;
+      max-width: 500px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #333;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 500;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #5a6fd1;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    .safe {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .phishing {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .suspicious {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Phishing URL Detector</h2>
+
+    <form id="urlForm">
+      <div class="form-group">
+        <label for="url">Enter URL to Check</label>
+        <input type="url" id="url" placeholder="https://example.com" required>
+      </div>
+
+      <button type="submit">Check URL</button>
+    </form>
+
+    <div id="result" class="result" style="display: none;"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('urlForm');
+    const resultDiv = document.getElementById('result');
+
+    function isPhishingURL(url) {
+      try {
+        const urlObj = new URL(url);
+
+        // Check if HTTPS
+        if (urlObj.protocol !== 'https:') {
+          return { isPhishing: true, reason: 'URL does not use HTTPS' };
+        }
+
+        // Check for IP address instead of domain
+        const hostname = urlObj.hostname;
+        const ipRegex = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
+        if (ipRegex.test(hostname)) {
+          return { isPhishing: true, reason: 'URL uses IP address instead of domain name' };
+        }
+
+        // Check for suspicious keywords in domain
+        const suspiciousKeywords = ['login', 'secure', 'bank', 'paypal', 'amazon', 'account', 'verify', 'update'];
+        const domainParts = hostname.split('.');
+        const domainName = domainParts.slice(0, -1).join('.').toLowerCase();
+        for (let keyword of suspiciousKeywords) {
+          if (domainName.includes(keyword)) {
+            return { isPhishing: true, reason: `Domain contains suspicious keyword: "${keyword}"` };
+          }
+        }
+
+        // Check domain length (very short or very long domains might be suspicious)
+        if (domainName.length < 4 || domainName.length > 50) {
+          return { isSuspicious: true, reason: 'Domain length is unusual' };
+        }
+
+        // Check for multiple subdomains
+        if (domainParts.length > 3) {
+          return { isSuspicious: true, reason: 'URL has multiple subdomains' };
+        }
+
+        // Check for URL shortening services (basic check)
+        const shorteners = ['bit.ly', 'tinyurl.com', 'goo.gl', 't.co'];
+        if (shorteners.includes(hostname)) {
+          return { isSuspicious: true, reason: 'URL uses a URL shortening service' };
+        }
+
+        return { isSafe: true };
+
+      } catch (e) {
+        return { isPhishing: true, reason: 'Invalid URL format' };
+      }
+    }
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const url = document.getElementById('url').value.trim();
+      const check = isPhishingURL(url);
+
+      resultDiv.style.display = 'block';
+
+      if (check.isSafe) {
+        resultDiv.className = 'result safe';
+        resultDiv.textContent = '✓ This URL appears to be safe.';
+      } else if (check.isPhishing) {
+        resultDiv.className = 'result phishing';
+        resultDiv.textContent = `⚠️ Potential phishing detected: ${check.reason}`;
+      } else if (check.isSuspicious) {
+        resultDiv.className = 'result suspicious';
+        resultDiv.textContent = `⚠️ Suspicious URL: ${check.reason}. Proceed with caution.`;
+      }
+    });
+  </script>
+
+</body>
+</html>
