@@ -4,431 +4,241 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Advanced Phishing Detector</title>
+  <meta name="description" content="Check URLs and webpage content for common phishing indicators. Stay safe online."/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
+    :root {
+      --clr-primary:   #4f46e5;    /* indigo-600 */
+      --clr-primary-d: #4338ca;    /* indigo-700 */
+      --clr-safe:      #10b981;    /* emerald-500 */
+      --clr-warning:   #f59e0b;    /* amber-500 */
+      --clr-danger:    #ef4444;    /* red-500 */
+      --clr-gray-50:   #f9fafb;
+      --clr-gray-100:  #f3f4f6;
+      --clr-gray-600:  #4b5563;
+      --clr-gray-800:  #1f2937;
+      --shadow-sm:     0 1px 3px rgba(0,0,0,0.1);
+      --shadow-md:     0 4px 12px rgba(0,0,0,0.12);
+      --radius-md:     10px;
+    }
+
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: Arial, Helvetica, sans-serif;
     }
 
     body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
-      background: linear-gradient(135deg, #667eea, #764ba2);
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 20px;
+      padding: 24px;
+      color: var(--clr-gray-800);
     }
 
     .container {
       background: white;
-      padding: 40px 30px;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
       width: 100%;
-      max-width: 500px;
+      max-width: 560px;
+      overflow: hidden;
     }
 
-    h2 {
-      text-align: center;
-      margin-bottom: 30px;
-      color: #333;
-    }
-
-    .mode-selector {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .mode-selector button {
-      padding: 10px 20px;
-      margin: 0 5px;
-      border: 1px solid #ddd;
-      background: white;
-      cursor: pointer;
-      border-radius: 6px;
-      transition: background 0.3s;
-    }
-
-    .mode-selector button.active {
-      background: #667eea;
+    .header {
+      background: var(--clr-primary);
       color: white;
-      border-color: #667eea;
+      padding: 28px 32px 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 0.95rem;
+    }
+
+    .main-content {
+      padding: 32px;
+    }
+
+    .mode-tabs {
+      display: flex;
+      border-bottom: 2px solid var(--clr-gray-100);
+      margin-bottom: 28px;
+    }
+
+    .mode-tabs button {
+      flex: 1;
+      padding: 14px;
+      background: none;
+      border: none;
+      font-weight: 600;
+      color: var(--clr-gray-600);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .mode-tabs button.active {
+      color: var(--clr-primary);
+    }
+
+    .mode-tabs button.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--clr-primary);
     }
 
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
 
     label {
       display: block;
       margin-bottom: 8px;
-      color: #555;
       font-weight: 500;
+      color: var(--clr-gray-800);
     }
 
-    input {
+    input, textarea {
       width: 100%;
-      padding: 12px 14px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 16px;
-      transition: border-color 0.3s;
+      padding: 13px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-    input:focus {
+    input:focus, textarea:focus {
       outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+      border-color: var(--clr-primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
     }
 
     textarea {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
-      font-family: monospace;
+      font-family: 'Consolas', 'Monaco', monospace;
+      min-height: 180px;
       resize: vertical;
-      min-height: 200px;
-      transition: border-color 0.3s;
     }
 
-    textarea:focus {
-      outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    .note {
+      font-size: 0.82rem;
+      color: var(--clr-gray-600);
+      margin-top: 8px;
+      line-height: 1.4;
     }
 
-    button {
+    button[type="submit"] {
       width: 100%;
       padding: 14px;
-      background: #667eea;
+      background: var(--clr-primary);
       color: white;
       border: none;
-      border-radius: 6px;
-      font-size: 16px;
+      border-radius: 8px;
+      font-size: 1.05rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: background 0.2s;
     }
 
-    button:hover {
-      background: #5a6fd1;
+    button[type="submit"]:hover:not(:disabled) {
+      background: var(--clr-primary-d);
     }
 
-    .result {
-      margin-top: 20px;
-      padding: 15px;
-      border-radius: 6px;
-      text-align: center;
+    button[type="submit"]:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #result {
+      margin-top: 28px;
+      padding: 20px;
+      border-radius: 8px;
+      line-height: 1.5;
       font-weight: 500;
+      white-space: pre-line;
     }
 
-    .safe {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
+    #result.safe     { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    #result.warning  { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+    #result.danger   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    #result.error    { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+
+    .result-icon {
+      font-size: 1.4rem;
+      margin-right: 8px;
     }
 
-    .phishing {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-
-    .suspicious {
-      background: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeaa7;
+    @media (max-width: 480px) {
+      .main-content { padding: 24px; }
+      .header { padding: 24px 20px 16px; }
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <h2>Advanced Phishing Detector</h2>
+<div class="container">
+  <div class="header">
+    <h1>Advanced Phishing Detector</h1>
+    <p>Detect phishing attempts — URL check & webpage analysis</p>
+  </div>
 
-    <div class="mode-selector">
-      <button id="urlMode" class="active">URL Analysis</button>
-      <button id="fullScanMode">Full Webpage Scan</button>
+  <div class="main-content">
+
+    <div class="mode-tabs">
+      <button class="active" data-mode="url">URL Check</button>
+      <button data-mode="html">HTML Paste</button>
+      <button data-mode="fetch">Full Page Scan</button>
     </div>
 
     <form id="urlForm">
       <div class="form-group">
-        <label for="url">Enter URL to Check</label>
-        <input type="url" id="url" placeholder="https://example.com" required>
+        <label for="urlInput">URL to analyze</label>
+        <input type="url" id="urlInput" placeholder="https://example.com" required autocomplete="off"/>
       </div>
-
-      <button type="submit">Check URL</button>
+      <button type="submit">Analyze URL</button>
     </form>
 
-    <form id="fullScanForm" style="display: none;">
+    <form id="htmlForm" hidden>
       <div class="form-group">
-        <label for="scanUrl">Enter URL to Scan Entire Webpage</label>
-        <input type="url" id="scanUrl" placeholder="https://suspicious-site.com" required>
+        <label for="htmlInput">Paste suspicious webpage HTML source</label>
+        <textarea id="htmlInput" placeholder="Right-click → View Page Source → copy & paste here..." required></textarea>
       </div>
-
-      <button type="submit">Scan Full Webpage</button>
-      <p style="font-size: 12px; color: #666; margin-top: 8px;">Note: This will fetch and analyze the complete webpage content from the provided URL.</p>
+      <button type="submit">Analyze HTML</button>
     </form>
+
+    <form id="fetchForm" hidden>
+      <div class="form-group">
+        <label for="fetchUrl">URL of webpage to scan</label>
+        <input type="url" id="fetchUrl" placeholder="https://suspicious-site.example" required autocomplete="off"/>
+      </div>
+      <button type="submit">Fetch & Analyze</button>
+      <p class="note">Note: This fetches public HTML only. Some sites block automated requests or require JavaScript rendering (not supported here).</p>
+    </form>
+
+    <div id="result" hidden></div>
+
   </div>
+</div>
 
-  <script>
-    const urlForm = document.getElementById('urlForm');
-    const fullScanForm = document.getElementById('fullScanForm');
-    const resultDiv = document.getElementById('result');
-    const urlModeBtn = document.getElementById('urlMode');
-    const fullScanModeBtn = document.getElementById('fullScanMode');
-
-    // Mode switching
-    urlModeBtn.addEventListener('click', () => {
-      urlForm.style.display = 'block';
-      fullScanForm.style.display = 'none';
-      urlModeBtn.classList.add('active');
-      fullScanModeBtn.classList.remove('active');
-      resultDiv.style.display = 'none';
-    });
-
-    fullScanModeBtn.addEventListener('click', () => {
-      urlForm.style.display = 'none';
-      fullScanForm.style.display = 'block';
-      fullScanModeBtn.classList.add('active');
-      urlModeBtn.classList.remove('active');
-      resultDiv.style.display = 'none';
-    });
-
-    function isPhishingURL(url) {
-      try {
-        const urlObj = new URL(url);
-
-        // Check if HTTPS
-        if (urlObj.protocol !== 'https:') {
-          return { isPhishing: true, reason: 'URL does not use HTTPS' };
-        }
-
-        // Check for IP address instead of domain
-        const hostname = urlObj.hostname;
-        const ipRegex = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
-        if (ipRegex.test(hostname)) {
-          return { isPhishing: true, reason: 'URL uses IP address instead of domain name' };
-        }
-
-        // Check for suspicious keywords in domain
-        const suspiciousKeywords = ['login', 'secure', 'bank', 'paypal', 'amazon', 'account', 'verify', 'update'];
-        const domainParts = hostname.split('.');
-        const domainName = domainParts.slice(0, -1).join('.').toLowerCase();
-        for (let keyword of suspiciousKeywords) {
-          if (domainName.includes(keyword)) {
-            return { isPhishing: true, reason: `Domain contains suspicious keyword: "${keyword}"` };
-          }
-        }
-
-        // Check domain length (very short or very long domains might be suspicious)
-        if (domainName.length < 4 || domainName.length > 50) {
-          return { isSuspicious: true, reason: 'Domain length is unusual' };
-        }
-
-        // Check for multiple subdomains
-        if (domainParts.length > 3) {
-          return { isSuspicious: true, reason: 'URL has multiple subdomains' };
-        }
-
-        // Check for URL shortening services (basic check)
-        const shorteners = ['bit.ly', 'tinyurl.com', 'goo.gl', 't.co'];
-        if (shorteners.includes(hostname)) {
-          return { isSuspicious: true, reason: 'URL uses a URL shortening service' };
-        }
-
-        return { isSafe: true };
-
-      } catch (e) {
-        return { isPhishing: true, reason: 'Invalid URL format' };
-      }
-    }
-
-    function analyzeWebpageContent(htmlContent) {
-      const issues = [];
-      const lowerHtml = htmlContent.toLowerCase();
-
-      // Check for login forms
-      if (lowerHtml.includes('<form') && (lowerHtml.includes('password') || lowerHtml.includes('login'))) {
-        issues.push('Contains login form - potential credential harvesting');
-      }
-
-      // Check for hidden inputs (common in phishing)
-      const hiddenInputs = (htmlContent.match(/<input[^>]*type="hidden"/gi) || []).length;
-      if (hiddenInputs > 2) {
-        issues.push('Multiple hidden input fields detected');
-      }
-
-      // Check for suspicious scripts
-      if (lowerHtml.includes('eval(') || lowerHtml.includes('document.write') || lowerHtml.includes('innerHTML')) {
-        issues.push('Contains potentially malicious JavaScript');
-      }
-
-      // Check for obfuscated code
-      const scriptTags = htmlContent.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || [];
-      for (let script of scriptTags) {
-        const scriptContent = script.replace(/<script[^>]*>|<\/script>/gi, '');
-        if (scriptContent.length > 1000 && scriptContent.includes('function') === false) {
-          issues.push('Large obfuscated script detected');
-          break;
-        }
-      }
-
-      // Check for urgency language
-      const urgencyWords = ['urgent', 'immediate', 'action required', 'account suspended', 'verify now', 'limited time'];
-      for (let word of urgencyWords) {
-        if (lowerHtml.includes(word)) {
-          issues.push(`Contains urgency language: "${word}"`);
-          break;
-        }
-      }
-
-      // Check for fake branding
-      const brands = ['paypal', 'amazon', 'bank of america', 'chase', 'wells fargo'];
-      for (let brand of brands) {
-        if (lowerHtml.includes(brand) && !lowerHtml.includes(brand + '.com')) {
-          issues.push(`Potential fake branding: "${brand}"`);
-          break;
-        }
-      }
-
-      // Check for external links to suspicious domains
-      const links = htmlContent.match(/href="([^"]*)"/gi) || [];
-      let suspiciousLinks = 0;
-      for (let link of links) {
-        const url = link.replace(/href="/, '').replace(/"/, '');
-        if (url.startsWith('http') && !url.includes('google') && !url.includes('facebook')) {
-          const check = isPhishingURL(url);
-          if (check.isPhishing || check.isSuspicious) {
-            suspiciousLinks++;
-          }
-        }
-      }
-      if (suspiciousLinks > 0) {
-        issues.push(`${suspiciousLinks} suspicious external links found`);
-      }
-
-      // Check for missing security headers simulation
-      if (!lowerHtml.includes('https://') && lowerHtml.includes('http://')) {
-        issues.push('Uses insecure HTTP links');
-      }
-
-      if (issues.length === 0) {
-        return { isSafe: true };
-      } else {
-        return { isPhishing: true, reasons: issues };
-      }
-    }
-
-    async function fetchWebpageContent(url) {
-      try {
-        // Using a CORS proxy to bypass browser restrictions
-        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-        const response = await fetch(proxyUrl + url, {
-          method: 'GET',
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const htmlContent = await response.text();
-        return htmlContent;
-      } catch (error) {
-        console.error('Error fetching webpage:', error);
-        throw new Error('Unable to fetch webpage content. This may be due to CORS restrictions or the site blocking automated requests.');
-      }
-    }
-
-    urlForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-
-      const url = document.getElementById('url').value.trim();
-      const check = isPhishingURL(url);
-
-      resultDiv.style.display = 'block';
-
-      if (check.isSafe) {
-        resultDiv.className = 'result safe';
-        resultDiv.textContent = '✓ This URL appears to be safe.';
-      } else if (check.isPhishing) {
-        resultDiv.className = 'result phishing';
-        resultDiv.textContent = `⚠️ Potential phishing detected: ${check.reason}`;
-      } else if (check.isSuspicious) {
-        resultDiv.className = 'result suspicious';
-        resultDiv.textContent = `⚠️ Suspicious URL: ${check.reason}. Proceed with caution.`;
-      }
-    });
-
-    fullScanForm.addEventListener('submit', async function(e) {
-      e.preventDefault();
-
-      const url = document.getElementById('scanUrl').value.trim();
-      const submitBtn = fullScanForm.querySelector('button');
-      const originalText = submitBtn.textContent;
-
-      // Show loading state
-      submitBtn.textContent = 'Scanning...';
-      submitBtn.disabled = true;
-      resultDiv.style.display = 'block';
-      resultDiv.className = 'result';
-      resultDiv.textContent = 'Fetching webpage content...';
-
-      try {
-        // First check the URL itself
-        const urlCheck = isPhishingURL(url);
-        if (urlCheck.isPhishing) {
-          resultDiv.className = 'result phishing';
-          resultDiv.textContent = `⚠️ URL Analysis: ${urlCheck.reason}\n\nFetching webpage content for deeper analysis...`;
-        } else if (urlCheck.isSuspicious) {
-          resultDiv.className = 'result suspicious';
-          resultDiv.textContent = `⚠️ URL Analysis: ${urlCheck.reason}\n\nFetching webpage content for deeper analysis...`;
-        } else {
-          resultDiv.textContent = '✓ URL appears safe. Fetching webpage content for deeper analysis...';
-        }
-
-        // Fetch and analyze the webpage content
-        const htmlContent = await fetchWebpageContent(url);
-        const contentAnalysis = analyzeWebpageContent(htmlContent);
-
-        if (contentAnalysis.isSafe && (urlCheck.isSafe || urlCheck.isSuspicious === undefined)) {
-          resultDiv.className = 'result safe';
-          resultDiv.textContent = '✓ Full webpage scan complete: No phishing indicators detected.';
-        } else {
-          resultDiv.className = 'result phishing';
-          let resultText = '⚠️ Full webpage scan detected potential phishing:\n';
-
-          if (urlCheck.isPhishing || urlCheck.isSuspicious) {
-            resultText += `• URL Issue: ${urlCheck.reason}\n`;
-          }
-
-          if (!contentAnalysis.isSafe) {
-            resultText += `• Content Issues:\n  - ${contentAnalysis.reasons.join('\n  - ')}`;
-          }
-
-          resultDiv.textContent = resultText;
-          resultDiv.style.whiteSpace = 'pre-line';
-        }
-
-      } catch (error) {
-        resultDiv.className = 'result phishing';
-        resultDiv.textContent = `⚠️ Error scanning webpage: ${error.message}\n\nThis may occur due to:\n• CORS restrictions\n• Site blocking automated requests\n• Network issues\n• Invalid URL`;
-        resultDiv.style.whiteSpace = 'pre-line';
-      } finally {
-        // Reset button
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-      }
-    });
-  </script>
+<script src="src/js/detector.js"></script>
 
 </body>
 </html>

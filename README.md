@@ -1,24 +1,38 @@
-# 🔒 Advanced Phishing Detection Suite
+# 🔒 Advanced Phishing Detector
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
-[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
-[![Cybersecurity](https://img.shields.io/badge/Cybersecurity-FF6B6B?style=flat&logo=shield&logoColor=white)](https://en.wikipedia.org/wiki/Computer_security)
+[![Node.js](https://img.shields.io/badge/Node.js-16+-green.svg)](https://nodejs.org/)
+[![Jest](https://img.shields.io/badge/Tested%20with-Jest-99424f.svg)](https://jestjs.io/)
+[![ESLint](https://img.shields.io/badge/Code%20Style-ESLint-4B32C3.svg)](https://eslint.org/)
+[![Prettier](https://img.shields.io/badge/Code%20Style-Prettier-F7B93E.svg)](https://prettier.io/)
 
 > **Revolutionizing phishing detection through intelligent, multi-layered analysis**
 
-Welcome to the **Advanced Phishing Detection Suite** - a cutting-edge cybersecurity tool designed to combat sophisticated phishing attacks. Built for ethical hackers, security researchers, and cybersecurity enthusiasts, this suite provides unparalleled insight into malicious web content.
+Welcome to **Advanced Phishing Detector** - a cutting-edge cybersecurity tool designed to combat sophisticated phishing attacks. Built for ethical hackers, security researchers, and cybersecurity enthusiasts, this suite provides unparalleled insight into malicious web content.
 
 ## 🚀 Quick Start
 
+### Prerequisites
+- Node.js 16+ and npm
+- Modern web browser
+
+### Installation
 ```bash
 # Clone the repository
 git clone https://github.com/amitadhikari8885/Amitrepo.git
-
-# Open the detector
 cd Amitrepo
-# Open phishing-detector.html in your web browser
+
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Start development server
+npm run dev
 ```
+
+Open `http://localhost:8000` in your browser and navigate to `dist/index.html`.
 
 ## 🎯 Core Features
 
@@ -27,6 +41,7 @@ cd Amitrepo
 | Analysis Mode | Description | Use Case |
 |---------------|-------------|----------|
 | **URL Analysis** | Lightning-fast URL pattern recognition | Quick security checks |
+| **HTML Content Analysis** | Static HTML source code inspection | Code review and analysis |
 | **Full Webpage Scan** | Automated live website crawling | Comprehensive threat assessment |
 
 ### 🛡️ **Advanced Detection Capabilities**
@@ -54,28 +69,30 @@ cd Amitrepo
 graph TD
     A[User Input] --> B{Analysis Mode}
     B -->|URL Only| C[URL Pattern Analysis]
-    B -->|Live Website| D[CORS Proxy Fetch]
+    B -->|HTML Source| D[Content Analysis]
+    B -->|Live Website| E[CORS Proxy Fetch]
 
-    C --> E[Heuristic Engine]
-    D --> F[Webpage Content]
-    F --> E
+    C --> F[Heuristic Engine]
+    D --> F
+    E --> G[Webpage Content]
+    G --> F
 
-    E --> G[Threat Classification]
-    G --> H[Risk Assessment]
-    H --> I[Detailed Report]
+    F --> H[Threat Classification]
+    H --> I[Risk Assessment]
+    I --> J[Detailed Report]
 ```
 
-## 🏆 What Sets This Apart
+## 🏆 What Sets Advanced Phishing Detector Apart
 
 ### 🔥 **Beyond Basic Checkers**
-While most phishing detectors stop at URL validation, our suite performs **comprehensive webpage analysis**:
+While most phishing detectors stop at URL validation, Advanced Phishing Detector performs **comprehensive webpage analysis**:
 
 - **Real-time Content Fetching**: Automated webpage retrieval using CORS proxy technology
 - **Multi-layered Heuristics**: Combines URL patterns with content-based detection
 - **Educational Framework**: Built for CEH certification preparation and cybersecurity learning
 - **Zero Dependencies**: Pure client-side implementation for maximum portability
 
-### 🎨 **User Experience Excellence**
+### 🎨 **Professional User Experience**
 - **Intuitive Interface**: Clean, professional design with mode-switching capabilities
 - **Real-time Feedback**: Live scanning progress and detailed result reporting
 - **Responsive Design**: Optimized for desktop and mobile cybersecurity workflows
@@ -84,15 +101,21 @@ While most phishing detectors stop at URL validation, our suite performs **compr
 ## 📖 Usage Guide
 
 ### Method 1: URL Analysis (Quick Check)
-1. Select **"URL Analysis"** mode
+1. Select **"URL Check"** mode
 2. Enter suspicious URL: `https://example-bank-login.com`
-3. Click **"Check URL"**
+3. Click **"Analyze URL"**
 4. Review instant threat assessment
 
-### Method 2: Full Webpage Scan (Automated)
-1. Choose **"Full Webpage Scan"** mode
+### Method 2: HTML Content Analysis
+1. Choose **"HTML Paste"** mode
+2. Copy and paste suspicious webpage HTML source
+3. Click **"Analyze HTML"**
+4. Study detailed content analysis
+
+### Method 3: Full Webpage Scan (Automated)
+1. Choose **"Full Page Scan"** mode
 2. Input target URL: `https://suspicious-site.com`
-3. Click **"Scan Full Webpage"**
+3. Click **"Fetch & Analyze"**
 4. Watch real-time analysis progress
 5. Study comprehensive threat report
 
@@ -122,17 +145,75 @@ if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
 | Risk Level | Color Code | Description |
 |------------|------------|-------------|
 | **Safe** | 🟢 Green | No malicious indicators detected |
-| **Suspicious** | 🟡 Yellow | Potential risks requiring caution |
-| **High Risk** | 🔴 Red | Strong phishing indicators present |
+| **Warning** | 🟡 Yellow | Potential risks requiring caution |
+| **Danger** | 🔴 Red | Strong phishing indicators present |
+| **Error** | ⚪ Gray | Analysis could not be completed |
 
 ## 🛠️ Project Structure
 
 ```
-Amitrepo/
-├── phishing-detector.html    # Main detection application
-├── index.html               # Demo login page
-├── ceh-plan.yml            # CEH study roadmap
-└── README.md               # This documentation
+advanced-phishing-detector/
+├── src/                          # Source code
+│   ├── css/
+│   │   └── styles.css           # Application styles
+│   ├── js/
+│   │   └── detector.js          # Core detection logic
+│   └── assets/                  # Static assets
+├── tests/                        # Test files
+│   └── detector.test.js         # Unit tests
+├── scripts/                      # Build scripts
+│   └── build.ps1                # Build automation
+├── dist/                         # Built application (generated)
+├── phishing-detector.html        # Main application
+├── index.html                    # Demo login page
+├── ceh-plan.yml                  # CEH study roadmap
+├── package.json                  # Node.js configuration
+├── jest.config.js                # Test configuration
+├── eslint.config.js              # Linting configuration
+├── .prettierrc                   # Code formatting
+├── .gitignore                    # Git ignore rules
+├── LICENSE                       # MIT license
+├── CONTRIBUTING.md               # Contribution guidelines
+└── README.md                     # This documentation
+```
+
+## 🧪 Development
+
+### Available Scripts
+```bash
+npm run build      # Build the project
+npm run dev        # Start development server
+npm run test       # Run tests
+npm run lint       # Check code style
+npm run format     # Format code
+npm run clean      # Clean build artifacts
+```
+
+### Testing
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run with coverage
+npm test -- --coverage
+```
+
+### Code Quality
+```bash
+# Lint code
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
+
+# Format code
+npm run format
+
+# Check formatting
+npm run format:check
 ```
 
 ## 🎓 Educational Value
@@ -155,25 +236,23 @@ This project demonstrates key concepts from the **Certified Ethical Hacker** cur
 
 ## 🤝 Contributing
 
-We welcome contributions from the cybersecurity community!
+We welcome contributions from the cybersecurity community! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ### Development Setup
 ```bash
-# Fork the repository
-# Create feature branch
-git checkout -b feature/enhanced-detection
+# Fork and clone the repository
+git clone https://github.com/YOUR_USERNAME/Amitrepo.git
+cd Amitrepo
 
-# Make your improvements
-# Test thoroughly
-# Submit pull request
+# Install dependencies
+npm install
+
+# Run tests and linting
+npm run test && npm run lint
+
+# Start development
+npm run dev
 ```
-
-### Areas for Enhancement
-- [ ] Machine learning integration for pattern recognition
-- [ ] API endpoint analysis capabilities
-- [ ] Browser extension development
-- [ ] Mobile application port
-- [ ] Multi-language support
 
 ## 📄 License
 
@@ -189,9 +268,10 @@ This tool is designed for **educational and ethical security research purposes o
 
 - **GitHub**: [@amitadhikari8885](https://github.com/amitadhikari8885)
 - **Project Repository**: [Amitrepo](https://github.com/amitadhikari8885/Amitrepo)
+- **Issues**: [GitHub Issues](https://github.com/amitadhikari8885/Amitrepo/issues)
 
 ---
 
 **"Security is not a product, but a process."** - Bruce Schneier
 
-*Built with ❤️ for the cybersecurity community*
+*Built with ❤️ for the cybersecurity community* 🛡️

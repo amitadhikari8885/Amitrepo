@@ -1,0 +1,53 @@
+{
+  "name": "advanced-phishing-detector",
+  "version": "1.0.0",
+  "description": "Advanced Phishing Detector - A comprehensive client-side tool for detecting phishing attempts through URL analysis and webpage content inspection",
+  "main": "src/js/detector.js",
+  "scripts": {
+    "build": "powershell -ExecutionPolicy Bypass -File scripts/build.ps1",
+    "dev": "python3 -m http.server 8000 || python -m http.server 8000",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/js/*.js",
+    "lint:fix": "eslint src/js/*.js --fix",
+    "format": "prettier --write src/js/*.js src/css/*.css",
+    "format:check": "prettier --check src/js/*.js src/css/*.css",
+    "clean": "rm -rf dist || rmdir /s /q dist",
+    "start": "npm run build && npm run dev",
+    "precommit": "npm run lint && npm run test",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "phishing",
+    "cybersecurity",
+    "detection",
+    "url-analysis",
+    "web-security",
+    "ethical-hacking",
+    "ceh"
+  ],
+  "author": "Amit Adhikari",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/amitadhikari8885/Amitrepo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/amitadhikari8885/Amitrepo/issues"
+  },
+  "homepage": "https://github.com/amitadhikari8885/Amitrepo#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.2.5"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "> 1%",
+    "not dead"
+  ]
+}
