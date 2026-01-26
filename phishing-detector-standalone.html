@@ -334,7 +334,8 @@
           <li>Uses risk scoring to identify high-confidence threats</li>
           <li><strong>Selective detection</strong> - only flags clear phishing attempts</li>
         </ul>
-        <p><strong>Note:</strong> This detector focuses on obvious phishing threats rather than flagging legitimate websites. Some advanced attacks may not be detected.</p>
+        <p><strong>Note:</strong> This detector focuses on obvious phishing threats rather than flagging legitimate websites. Many sites block automated requests for security.</p>
+        <p><strong>🔧 Troubleshooting:</strong> If fetching fails, try "Paste HTML" mode. For debugging, open browser console (F12) and run <code>testFetch()</code></p>
         <p><strong>Keyboard shortcuts:</strong> Ctrl+1 (URL), Ctrl+2 (HTML), Ctrl+3 (Full Scan), Ctrl+Enter (Submit)</p>
       </div>
     </form>
@@ -625,16 +626,49 @@ function analyzeHtmlContent(html) {
 }
 
 async function fetchHtml(url) {
+  // First try direct fetch (works for sites with permissive CORS)
+  try {
+    console.log('🔗 Trying direct fetch (no proxy)...');
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const response = await fetch(url, {
+      signal: controller.signal,
+      method: 'GET',
+      mode: 'cors',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9'
+      }
+    });
+
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const html = await response.text();
+      if (html && html.includes('<') && html.length > 10) {
+        console.log(`✅ Direct fetch successful: ${html.length.toLocaleString()} characters`);
+        return html;
+      }
+    }
+  } catch (error) {
+    console.log('⚠️ Direct fetch failed, trying proxies...', error.message);
+  }
+
   // Try multiple CORS proxies for better reliability
   const proxies = [
     'https://api.allorigins.win/raw?url=',
     'https://cors-anywhere.herokuapp.com/',
     'https://thingproxy.freeboard.io/fetch/',
     'https://api.codetabs.com/v1/proxy?quest=',
-    'https://proxy.cors.sh/'
+    'https://proxy.cors.sh/',
+    'https://corsproxy.org/?'
   ];
 
   let lastError;
+  let lastResponse;
 
   for (const proxy of proxies) {
     try {
@@ -642,21 +676,38 @@ async function fetchHtml(url) {
 
       // Add timeout to prevent hanging
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
 
-      const response = await fetch(proxy + encodeURIComponent(url), {
+      let fetchUrl;
+      if (proxy.includes('allorigins.win')) {
+        fetchUrl = proxy + encodeURIComponent(url);
+      } else if (proxy.includes('codetabs.com')) {
+        fetchUrl = proxy + encodeURIComponent(url);
+      } else if (proxy.includes('corsproxy.org')) {
+        fetchUrl = proxy + encodeURIComponent(url);
+      } else {
+        fetchUrl = proxy + encodeURIComponent(url);
+      }
+
+      const response = await fetch(fetchUrl, {
         signal: controller.signal,
+        method: 'GET',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.5',
-          'Accept-Encoding': 'gzip, deflate',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Encoding': 'gzip, deflate, br',
           'Connection': 'keep-alive',
-          'Upgrade-Insecure-Requests': '1'
+          'Upgrade-Insecure-Requests': '1',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Cache-Control': 'max-age=0'
         }
       });
 
       clearTimeout(timeoutId);
+      lastResponse = response;
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -664,42 +715,113 @@ async function fetchHtml(url) {
 
       const html = await response.text();
 
-      // Basic validation - check if we got actual HTML
-      if (html.length < 50 || !html.includes('<')) {
-        throw new Error('Invalid HTML response received');
+      // Enhanced validation
+      if (!html || html.length < 10) {
+        throw new Error('Empty response received');
       }
 
-      // Additional validation - check for common error pages
-      if (html.toLowerCase().includes('access denied') ||
-          html.toLowerCase().includes('403 forbidden') ||
-          html.toLowerCase().includes('blocked')) {
-        throw new Error('Website blocked the request');
+      // Check if we got HTML
+      if (!html.includes('<') || !html.includes('>')) {
+        throw new Error('Response does not appear to be HTML');
       }
 
-      console.log(`Successfully fetched ${html.length} characters from ${url}`);
+      // Check for common error pages
+      const lowerHtml = html.toLowerCase();
+      if (lowerHtml.includes('access denied') ||
+          lowerHtml.includes('403 forbidden') ||
+          lowerHtml.includes('blocked') ||
+          lowerHtml.includes('cloudflare') && lowerHtml.includes('challenge') ||
+          lowerHtml.includes('captcha') ||
+          lowerHtml.includes('rate limit') ||
+          lowerHtml.includes('too many requests')) {
+        throw new Error('Website blocked the request or requires captcha');
+      }
+
+      // Check for proxy error pages
+      if (lowerHtml.includes('proxy') && lowerHtml.includes('error') ||
+          lowerHtml.includes('service unavailable') ||
+          lowerHtml.includes('bad gateway') ||
+          lowerHtml.includes('gateway timeout')) {
+        throw new Error('Proxy service error');
+      }
+
+      console.log(`✅ Successfully fetched ${html.length.toLocaleString()} characters from ${url} via ${proxy}`);
       return html;
 
     } catch (error) {
-      console.warn(`Proxy ${proxy} failed:`, error.message);
+      console.warn(`❌ Proxy ${proxy} failed:`, error.message);
       lastError = error;
+
+      // If this is a timeout or network error, try next proxy
+      if (error.name === 'AbortError' || error.message.includes('fetch')) {
+        continue;
+      }
+
+      // For other errors, also try next proxy
       continue;
     }
   }
 
-  // If all proxies failed, provide helpful error message
-  throw new Error(
-    `Could not fetch webpage. This may be due to:\n` +
-    `• CORS restrictions on the target site\n` +
-    `• Network connectivity issues\n` +
-    `• Site blocking automated requests\n` +
-    `• All proxy services temporarily unavailable\n\n` +
-    `Technical details: ${lastError?.message || 'All proxy services failed'}`
-  );
+  // If all proxies failed, provide detailed error message
+  let errorMessage = `Could not fetch webpage from any proxy service.\n\n`;
+
+  if (lastResponse) {
+    errorMessage += `Last response status: ${lastResponse.status} ${lastResponse.statusText}\n`;
+  }
+
+  errorMessage += `Possible reasons:\n`;
+  errorMessage += `• Website blocks automated requests (most common)\n`;
+  errorMessage += `• CORS restrictions prevent cross-origin access\n`;
+  errorMessage += `• Website requires JavaScript to load content\n`;
+  errorMessage += `• All proxy services are temporarily unavailable\n`;
+  errorMessage += `• Network connectivity issues\n\n`;
+
+  errorMessage += `💡 Solutions:\n`;
+  errorMessage += `• Try "Paste HTML" mode by copying the page source manually\n`;
+  errorMessage += `• Use browser developer tools (F12) → Network tab → copy response\n`;
+  errorMessage += `• Try again later if proxy services are down\n\n`;
+
+  if (lastError) {
+    errorMessage += `Technical details: ${lastError.message}`;
+  }
+
+  throw new Error(errorMessage);
 }
 
 // ────────────────────────────────────────────────
-// Event Listeners
+// Debug/Test Functions (call from browser console)
 // ────────────────────────────────────────────────
+
+// Test fetch functionality
+window.testFetch = async function(url = 'https://httpbin.org/html') {
+  console.log('🧪 Testing fetch functionality...');
+  try {
+    const html = await fetchHtml(url);
+    console.log('✅ Fetch successful!');
+    console.log('📄 HTML length:', html.length);
+    console.log('📄 First 200 chars:', html.substring(0, 200));
+    return html;
+  } catch (error) {
+    console.error('❌ Fetch failed:', error.message);
+    throw error;
+  }
+};
+
+// Test URL analysis
+window.testUrlAnalysis = function(url = 'https://example.com') {
+  console.log('🧪 Testing URL analysis...');
+  const result = checkUrlSafety(url);
+  console.log('📊 URL Analysis Result:', result);
+  return result;
+};
+
+// Test HTML analysis
+window.testHtmlAnalysis = function(html = '<html><body><form><input type="password"></form></body></html>') {
+  console.log('🧪 Testing HTML analysis...');
+  const result = analyzeHtmlContent(html);
+  console.log('📊 HTML Analysis Result:', result);
+  return result;
+};
 
 document.addEventListener('DOMContentLoaded', function() {
   // Tab switching
@@ -958,9 +1080,11 @@ document.addEventListener('DOMContentLoaded', function() {
         `Could not complete the webpage scan.\n\n${err.message}\n\n` +
         '💡 Suggestions:\n' +
         '• Try "Paste HTML" mode by copying the page source manually\n' +
-        '• Check if the website allows automated access\n' +
-        '• Ensure the URL is accessible and not behind a login\n' +
-        '• Some sites block CORS requests for security reasons'
+        '• Use browser developer tools (F12) → Network tab → copy response\n' +
+        '• Check if the website is accessible in your browser\n' +
+        '• Some sites block CORS requests for security reasons\n' +
+        '• Try a different URL or try again later\n\n' +
+        '🔧 For debugging: Check browser console (F12) for detailed error logs.'
       );
     } finally {
       btn.textContent = originalText;
