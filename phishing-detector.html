@@ -145,6 +145,49 @@
       line-height: 1.4;
     }
 
+    .help-text {
+      font-size: 0.85rem;
+      color: var(--clr-gray-600);
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    .info-box {
+      margin-top: 20px;
+      padding: 16px;
+      background: var(--clr-gray-50);
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .info-box h4 {
+      margin: 0 0 12px 0;
+      color: var(--clr-primary);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .info-box ul {
+      margin: 0 0 12px 0;
+      padding-left: 20px;
+    }
+
+    .info-box li {
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+
+    .info-box p {
+      margin: 0;
+      line-height: 1.4;
+      color: var(--clr-gray-700);
+    }
+
+    .info-box strong {
+      color: var(--clr-gray-800);
+    }
+
     button[type="submit"] {
       width: 100%;
       padding: 14px;
@@ -226,11 +269,21 @@
 
     <form id="fetchForm" hidden>
       <div class="form-group">
-        <label for="fetchUrl">URL of webpage to scan</label>
-        <input type="url" id="fetchUrl" placeholder="https://suspicious-site.example" required autocomplete="off"/>
+        <label for="fetchUrl">🌐 URL of webpage to scan</label>
+        <input type="url" id="fetchUrl" placeholder="https://example-suspicious-site.com" required autocomplete="off"/>
+        <small class="help-text">Enter the full URL of the webpage you want to analyze for phishing indicators</small>
       </div>
-      <button type="submit">Fetch & Analyze</button>
-      <p class="note">Note: This fetches public HTML only. Some sites block automated requests or require JavaScript rendering (not supported here).</p>
+      <button type="submit">🚀 Fetch & Analyze</button>
+      <div class="info-box">
+        <h4>ℹ️ How Full Page Scan Works</h4>
+        <ul>
+          <li>Automatically fetches the webpage HTML content</li>
+          <li>Analyzes URL structure for suspicious patterns</li>
+          <li>Scans HTML for phishing indicators (forms, scripts, urgency language)</li>
+          <li>Provides comprehensive security assessment</li>
+        </ul>
+        <p><strong>Note:</strong> Some websites block automated requests. If scanning fails, try copying the page source manually and use "Paste HTML" mode instead.</p>
+      </div>
     </form>
 
     <div id="result" hidden></div>
