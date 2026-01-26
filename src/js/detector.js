@@ -164,11 +164,14 @@ function analyzeHtmlContent(html) {
     /outerHTML\s*=/,
     /setTimeout\s*\(\s*["'][^"']*javascript:/,
     /setInterval\s*\(\s*["'][^"']*javascript:/,
-    /Function\s*\(\s*["'],
+    /Function\s*\(\s*["'][^"']*\)/,
     /atob\s*\(/,
     /btoa\s*\(/,
     /unescape\s*\(/,
-    /decodeURIComponent\s*\(\s*atob/
+    /decodeURIComponent\s*\(\s*atob\s*\(/,
+    /location\s*=\s*["'][^"']*["']/,
+    /window\.location\s*=\s*["'][^"']*["']/,
+    /document\.location\s*=\s*["'][^"']*["']/
   ];
 
   for (const pattern of dangerousJs) {
