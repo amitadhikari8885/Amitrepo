@@ -330,10 +330,11 @@
         <ul>
           <li>Automatically fetches the webpage HTML content</li>
           <li>Analyzes URL structure for suspicious patterns</li>
-          <li>Scans HTML for phishing indicators (forms, scripts, urgency language)</li>
-          <li>Provides comprehensive security assessment</li>
+          <li>Scans HTML for <strong>combinations</strong> of phishing indicators</li>
+          <li>Uses risk scoring to identify high-confidence threats</li>
+          <li><strong>Selective detection</strong> - only flags clear phishing attempts</li>
         </ul>
-        <p><strong>Note:</strong> Some websites block automated requests. If scanning fails, try copying the page source manually and use "Paste HTML" mode instead.</p>
+        <p><strong>Note:</strong> This detector focuses on obvious phishing threats rather than flagging legitimate websites. Some advanced attacks may not be detected.</p>
         <p><strong>Keyboard shortcuts:</strong> Ctrl+1 (URL), Ctrl+2 (HTML), Ctrl+3 (Full Scan), Ctrl+Enter (Submit)</p>
       </div>
     </form>
@@ -480,146 +481,145 @@ function checkUrlSafety(urlStr) {
 function analyzeHtmlContent(html) {
   const lower = html.toLowerCase();
   const issues = [];
+  let riskScore = 0;
 
-  // Login form detection (improved)
+  // HIGH RISK: Multiple suspicious indicators together
+  const suspiciousIndicators = [];
+
+  // 1. Check for credential harvesting (login forms with suspicious context)
   const formRegex = /<form[^>]*>[\s\S]*?<\/form>/gi;
   const forms = html.match(formRegex) || [];
 
   for (const form of forms) {
     const formLower = form.toLowerCase();
-    if (formLower.includes('password') || formLower.includes('pass') ||
-        formLower.includes('pwd') || formLower.includes('login') ||
-        formLower.includes('signin') || formLower.includes('auth')) {
-      issues.push('Contains login/authentication form');
-      break;
+    const hasCredentials = formLower.includes('password') || formLower.includes('pass') || formLower.includes('pwd');
+    const hasLogin = formLower.includes('login') || formLower.includes('signin') || formLower.includes('auth');
+
+    if (hasCredentials && hasLogin) {
+      // Check for additional suspicious elements
+      const hasHiddenFields = (form.match(/type\s*=\s*["']hidden["']/gi) || []).length > 3;
+      const hasExternalAction = formLower.includes('action=') && formLower.includes('http') && !formLower.includes(window.location.hostname.toLowerCase());
+
+      if (hasHiddenFields || hasExternalAction) {
+        issues.push('Credential harvesting form with suspicious characteristics');
+        riskScore += 3;
+        suspiciousIndicators.push('credential_harvesting');
+      }
     }
   }
 
-  // Hidden fields abuse (improved threshold and detection)
-  const hiddenInputs = html.match(/<input[^>]*type\s*=\s*["']hidden["'][^>]*>/gi) || [];
-  if (hiddenInputs.length > 2) {
-    issues.push(`Multiple hidden form fields detected (${hiddenInputs.length})`);
+  // 2. Check for multiple urgency phrases (pressure tactics)
+  const urgencyCount = URGENCY_PHRASES.filter(phrase => lower.includes(phrase)).length;
+  if (urgencyCount >= 2) {
+    issues.push(`Multiple urgency/pressure phrases detected (${urgencyCount})`);
+    riskScore += 2;
+    suspiciousIndicators.push('urgency_tactics');
   }
 
-  // Suspicious form actions
-  const actionMatches = html.match(/action\s*=\s*["']([^"']*)["']/gi) || [];
-  for (const match of actionMatches) {
-    const action = match.toLowerCase();
-    if (action.includes('http') && !action.includes(window.location.hostname.toLowerCase())) {
-      issues.push('Form submits to external domain');
-      break;
-    }
+  // 3. Check for fake security indicators
+  if (lower.includes('🔒') && lower.includes('secure') && !lower.includes('https://')) {
+    issues.push('Fake security indicators without HTTPS');
+    riskScore += 2;
+    suspiciousIndicators.push('fake_security');
   }
 
-  // Dangerous JavaScript patterns (expanded)
-  const dangerousJs = [
-    /eval\s*\(/,
-    /document\.write\s*\(/,
-    /innerHTML\s*=.*\+/,
-    /outerHTML\s*=/,
+  // 4. Check for suspicious JavaScript patterns (only the most dangerous ones)
+  const highRiskJsPatterns = [
+    /eval\s*\(/,  // Direct code execution
+    /document\.write\s*\(\s*["'][^"']*javascript:/,  // Protocol handlers
     /setTimeout\s*\(\s*["'][^"']*javascript:/,
     /setInterval\s*\(\s*["'][^"']*javascript:/,
-    /Function\s*\(\s*["'][^"']*\)/,
-    /atob\s*\(/,
-    /btoa\s*\(/,
-    /unescape\s*\(/,
-    /decodeURIComponent\s*\(\s*atob\s*\(/,
-    /location\s*=\s*["'][^"']*["']/,
-    /window\.location\s*=\s*["'][^"']*["']/,
-    /document\.location\s*=\s*["'][^"']*["']/
+    /location\s*=\s*["'][^"']*javascript:/,
+    /atob\s*\([^)]*\)\s*\)\s*;?\s*eval/,  // Obfuscated eval
+    /unescape\s*\([^)]*\)\s*\)\s*;?\s*eval/
   ];
 
-  for (const pattern of dangerousJs) {
+  for (const pattern of highRiskJsPatterns) {
     if (pattern.test(html)) {
-      issues.push('Potentially dangerous JavaScript patterns detected');
+      issues.push('High-risk JavaScript patterns detected (code execution/redirection)');
+      riskScore += 3;
+      suspiciousIndicators.push('dangerous_js');
       break;
     }
   }
 
-  // Obfuscated scripts (improved detection)
-  const scripts = html.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || [];
-  for (const script of scripts) {
-    const content = script.replace(/<script[^>]*>|<\/script>/gi, '').trim();
-    // Check for very long lines (potential obfuscation)
-    const lines = content.split('\n');
-    if (lines.some(line => line.length > 500)) {
-      issues.push('Potentially obfuscated JavaScript code detected');
-      break;
-    }
-    // Check for excessive character repetition
-    if (/(.)\1{10,}/.test(content)) {
-      issues.push('Suspicious character repetition in JavaScript');
-      break;
-    }
-  }
-
-  // Urgency language (expanded list)
-  const urgencyPatterns = [
-    ...URGENCY_PHRASES,
-    'act now', 'immediate action', 'time sensitive', 'expires soon',
-    'limited offer', 'do not ignore', 'important notice', 'security alert',
-    'account verification', 'payment required', 'suspension warning'
-  ];
-
-  for (const phrase of urgencyPatterns) {
-    if (lower.includes(phrase)) {
-      issues.push(`Urgency/pressure language: "${phrase}"`);
-      break;
-    }
-  }
-
-  // Brand impersonation (expanded)
-  const brands = [
-    'paypal', 'amazon', 'office', 'microsoft', 'chase', 'wells fargo',
-    'bank of america', 'citibank', 'facebook', 'google', 'apple',
-    'netflix', 'instagram', 'linkedin', 'twitter', 'yahoo'
-  ];
-
+  // 5. Check for brand impersonation with suspicious context
+  const brands = ['paypal', 'amazon', 'microsoft', 'apple', 'google', 'facebook', 'netflix'];
   for (const brand of brands) {
     if (lower.includes(brand)) {
-      // Check if it's actually the legitimate domain
-      const domainPattern = new RegExp(`${brand.replace(/\s+/g, '')}\\.(com|net|org|edu)`, 'i');
-      if (!domainPattern.test(html)) {
-        issues.push(`Possible impersonation of: ${brand}`);
+      // Only flag if combined with suspicious elements
+      const hasLoginForm = forms.some(form => form.toLowerCase().includes('password'));
+      const hasUrgency = urgencyCount > 0;
+      const currentDomain = window.location.hostname.toLowerCase();
+
+      // Don't flag legitimate brand domains
+      const legitimateDomains = [`${brand}.com`, `${brand}.net`, `${brand}.org`, `www.${brand}.com`];
+      const isLegitimate = legitimateDomains.some(domain => currentDomain.includes(domain));
+
+      if (!isLegitimate && (hasLoginForm || hasUrgency)) {
+        issues.push(`Potential ${brand} impersonation with suspicious login context`);
+        riskScore += 2;
+        suspiciousIndicators.push('brand_impersonation');
         break;
       }
     }
   }
 
-  // Suspicious redirects
+  // 6. Check for excessive redirects (only if combined with other issues)
   const redirectPatterns = [
-    /window\.location\s*=/,
+    /window\.location\s*=.*http/,
     /location\.href\s*=.*http/,
-    /document\.location\s*=/,
-    /meta[^>]*http-equiv\s*=\s*["']refresh["']/i
+    /document\.location\s*=.*http/
   ];
 
-  for (const pattern of redirectPatterns) {
-    if (pattern.test(html)) {
-      issues.push('Automatic redirects or location changes detected');
+  const hasRedirects = redirectPatterns.some(pattern => pattern.test(html));
+  if (hasRedirects && riskScore > 0) {
+    issues.push('Automatic redirects detected with other suspicious indicators');
+    riskScore += 1;
+  }
+
+  // 7. Check for obfuscated code (only extremely suspicious patterns)
+  const scripts = html.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || [];
+  for (const script of scripts) {
+    const content = script.replace(/<script[^>]*>|<\/script>/gi, '').trim();
+
+    // Only flag if multiple obfuscation indicators are present
+    const hasLongLines = content.split('\n').some(line => line.length > 1000);
+    const hasCharRepetition = /(.)\1{20,}/.test(content);
+    const hasEncodedStrings = (content.match(/\\x[0-9a-f]{2}/gi) || []).length > 5;
+
+    if (hasLongLines && (hasCharRepetition || hasEncodedStrings)) {
+      issues.push('Highly suspicious obfuscated JavaScript code');
+      riskScore += 2;
+      suspiciousIndicators.push('obfuscation');
       break;
     }
   }
 
-  // Fake security indicators
-  if (lower.includes('secure') && lower.includes('🔒') && !lower.includes('https://')) {
-    issues.push('Fake security indicators without HTTPS');
+  // 8. Check for link farming (only extreme cases)
+  const externalLinks = html.match(/<a[^>]*href\s*=\s*["']https?:\/\/[^"']*["'][^>]*>/gi) || [];
+  if (externalLinks.length > 20 && riskScore > 0) {
+    issues.push(`Excessive external links (${externalLinks.length}) with other suspicious indicators`);
+    riskScore += 1;
   }
 
-  // Excessive external links (potential link farming)
-  const externalLinks = html.match(/<a[^>]*href\s*=\s*["']https?:\/\/[^"']*["'][^>]*>/gi) || [];
-  if (externalLinks.length > 10) {
-    issues.push(`Excessive external links (${externalLinks.length}) - possible link farming`);
+  // Determine final assessment based on risk score and indicators
+  let assessment = 'safe';
+  if (riskScore >= 5 || (riskScore >= 3 && suspiciousIndicators.length >= 2)) {
+    assessment = 'danger';
+  } else if (riskScore >= 2 || suspiciousIndicators.length >= 1) {
+    assessment = 'warning';
   }
 
   return {
-    safe: issues.length === 0,
+    safe: assessment === 'safe',
     issues,
     stats: {
       forms: forms.length,
       scripts: scripts.length,
       externalLinks: externalLinks.length,
-      hiddenFields: hiddenInputs.length
+      riskScore,
+      indicators: suspiciousIndicators.length
     }
   };
 }
@@ -814,20 +814,32 @@ document.addEventListener('DOMContentLoaded', function() {
       let title = '✅ No Phishing Indicators Found';
       let details = '';
 
+      if (!analysis.safe) {
+        // Determine severity based on risk score and indicators
+        if (analysis.stats.riskScore >= 5 || analysis.stats.indicators >= 2) {
+          type = 'danger';
+          title = '🚨 High-Risk Phishing Content Detected';
+        } else {
+          type = 'warning';
+          title = '⚠️ Potential Security Concerns Detected';
+        }
+
+        details = `Risk Score: ${analysis.stats.riskScore}/10 | Suspicious Indicators: ${analysis.stats.indicators}\n\n`;
+        details += 'Security Issues Found:\n';
+        analysis.issues.forEach(issue => details += `• ${issue}\n`);
+        details += '\n';
+      }
+
+      details += `📊 Content Analysis:\n`;
+      details += `• ${analysis.stats.forms} form(s) detected\n`;
+      details += `• ${analysis.stats.scripts} script(s) found\n`;
+      details += `• ${analysis.stats.externalLinks} external link(s)\n\n`;
+
       if (analysis.safe) {
-        details = 'The provided HTML content appears to be safe.\n\n';
-        details += `📊 Analysis Summary:\n`;
-        details += `• ${analysis.stats.forms} form(s) detected\n`;
-        details += `• ${analysis.stats.scripts} script(s) found\n`;
-        details += `• ${analysis.stats.externalLinks} external link(s)\n`;
-        details += `• ${analysis.stats.hiddenFields} hidden field(s)\n\n`;
-        details += 'No suspicious patterns or phishing indicators were detected.';
+        details += '✅ No suspicious patterns or combinations detected.\n';
+        details += 'ℹ️ Note: This analysis focuses on high-confidence phishing indicators.';
       } else {
-        type = 'danger';
-        title = '🚨 Potential Phishing Content Detected';
-        details = `Found ${analysis.issues.length} potential security issue(s):\n\n`;
-        details += analysis.issues.map(i => `• ${i}`).join('\n');
-        details += '\n\n⚠️ This content may be malicious. Exercise caution!';
+        details += '⚠️ Exercise caution with this content.';
       }
 
       showResult(type, title, details);
@@ -900,32 +912,42 @@ document.addEventListener('DOMContentLoaded', function() {
       details += `  • Forms: ${contentVerdict.stats.forms}\n`;
       details += `  • Scripts: ${contentVerdict.stats.scripts}\n`;
       details += `  • External Links: ${contentVerdict.stats.externalLinks}\n`;
-      details += `  • Hidden Fields: ${contentVerdict.stats.hiddenFields}\n\n`;
+      details += `  • Risk Score: ${contentVerdict.stats.riskScore}/10\n`;
+      details += `  • Suspicious Indicators: ${contentVerdict.stats.indicators}\n\n`;
 
       const allIssues = [];
+      let totalRiskScore = 0;
 
       if (!urlVerdict.safe) {
         allIssues.push('🚨 URL Security Issues:');
         urlVerdict.issues.forEach(issue => allIssues.push(`  • ${issue}`));
         allIssues.push('');
+        totalRiskScore += 2; // URL issues add to risk
       }
 
       if (!contentVerdict.safe) {
         allIssues.push('🚨 Content Security Issues:');
         contentVerdict.issues.forEach(issue => allIssues.push(`  • ${issue}`));
         allIssues.push('');
+        totalRiskScore += contentVerdict.stats.riskScore;
       }
 
-      if (allIssues.length > 0) {
+      // Determine overall assessment based on combined risk
+      if (totalRiskScore >= 5 || (allIssues.length > 0 && (contentVerdict.stats.indicators >= 2 || urlVerdict.issues.length >= 2))) {
         type = 'danger';
-        title = '🚨 Potential phishing detected!';
+        title = '🚨 High-Risk Phishing Site Detected!';
+        details += allIssues.join('\n');
+        details += '\n🚫 DO NOT enter credentials or personal information on this site.';
+      } else if (allIssues.length > 0) {
+        type = 'warning';
+        title = '⚠️ Potential Security Concerns Detected';
         details += allIssues.join('\n');
         details += '\n⚠️ Exercise caution when visiting this site.';
       } else {
         details += '✅ URL structure appears safe\n';
-        details += '✅ Content analysis found no suspicious patterns\n';
-        details += '✅ No urgent language or credential harvesting detected\n\n';
-        details += 'ℹ️ Note: This analysis covers basic phishing indicators. Advanced threats may not be detected.';
+        details += '✅ Content analysis found no suspicious patterns or combinations\n';
+        details += '✅ No high-confidence phishing indicators detected\n\n';
+        details += 'ℹ️ Note: This analysis focuses on clear phishing threats. Advanced or targeted attacks may not be detected.';
       }
 
       showResult(type, title, details);
