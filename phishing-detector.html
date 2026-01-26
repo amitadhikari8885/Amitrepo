@@ -153,7 +153,8 @@
 
     <div class="mode-selector">
       <button id="urlMode" class="active">URL Analysis</button>
-      <button id="webpageMode">Webpage Content Analysis</button>
+      <button id="webpageMode">Paste HTML</button>
+      <button id="fullScanMode">Full Webpage Scan</button>
     </div>
 
     <form id="urlForm">
@@ -172,31 +173,56 @@
       </div>
 
       <button type="submit">Analyze Webpage</button>
+    </form>
 
-    <div id="result" class="result" style="display: none;"></div>
+    <form id="fullScanForm" style="display: none;">
+      <div class="form-group">
+        <label for="scanUrl">Enter URL to Scan Entire Webpage</label>
+        <input type="url" id="scanUrl" placeholder="https://suspicious-site.com" required>
+      </div>
+
+      <button type="submit">Scan Full Webpage</button>
+      <p style="font-size: 12px; color: #666; margin-top: 8px;">Note: This will fetch and analyze the complete webpage content from the provided URL.</p>
+    </form>
   </div>
 
   <script>
     const urlForm = document.getElementById('urlForm');
     const webpageForm = document.getElementById('webpageForm');
+    const fullScanForm = document.getElementById('fullScanForm');
     const resultDiv = document.getElementById('result');
     const urlModeBtn = document.getElementById('urlMode');
     const webpageModeBtn = document.getElementById('webpageMode');
+    const fullScanModeBtn = document.getElementById('fullScanMode');
 
     // Mode switching
     urlModeBtn.addEventListener('click', () => {
       urlForm.style.display = 'block';
       webpageForm.style.display = 'none';
+      fullScanForm.style.display = 'none';
       urlModeBtn.classList.add('active');
       webpageModeBtn.classList.remove('active');
+      fullScanModeBtn.classList.remove('active');
       resultDiv.style.display = 'none';
     });
 
     webpageModeBtn.addEventListener('click', () => {
       urlForm.style.display = 'none';
       webpageForm.style.display = 'block';
+      fullScanForm.style.display = 'none';
       webpageModeBtn.classList.add('active');
       urlModeBtn.classList.remove('active');
+      fullScanModeBtn.classList.remove('active');
+      resultDiv.style.display = 'none';
+    });
+
+    fullScanModeBtn.addEventListener('click', () => {
+      urlForm.style.display = 'none';
+      webpageForm.style.display = 'none';
+      fullScanForm.style.display = 'block';
+      fullScanModeBtn.classList.add('active');
+      urlModeBtn.classList.remove('active');
+      webpageModeBtn.classList.remove('active');
       resultDiv.style.display = 'none';
     });
 
@@ -325,6 +351,29 @@
       }
     }
 
+    async function fetchWebpageContent(url) {
+      try {
+        // Using a CORS proxy to bypass browser restrictions
+        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+        const response = await fetch(proxyUrl + url, {
+          method: 'GET',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const htmlContent = await response.text();
+        return htmlContent;
+      } catch (error) {
+        console.error('Error fetching webpage:', error);
+        throw new Error('Unable to fetch webpage content. This may be due to CORS restrictions or the site blocking automated requests.');
+      }
+    }
+
     urlForm.addEventListener('submit', function(e) {
       e.preventDefault();
 
@@ -360,6 +409,67 @@
         resultDiv.className = 'result phishing';
         resultDiv.textContent = `⚠️ Potential phishing detected:\n• ${analysis.reasons.join('\n• ')}`;
         resultDiv.style.whiteSpace = 'pre-line';
+      }
+    });
+
+    fullScanForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const url = document.getElementById('scanUrl').value.trim();
+      const submitBtn = fullScanForm.querySelector('button');
+      const originalText = submitBtn.textContent;
+
+      // Show loading state
+      submitBtn.textContent = 'Scanning...';
+      submitBtn.disabled = true;
+      resultDiv.style.display = 'block';
+      resultDiv.className = 'result';
+      resultDiv.textContent = 'Fetching webpage content...';
+
+      try {
+        // First check the URL itself
+        const urlCheck = isPhishingURL(url);
+        if (urlCheck.isPhishing) {
+          resultDiv.className = 'result phishing';
+          resultDiv.textContent = `⚠️ URL Analysis: ${urlCheck.reason}\n\nFetching webpage content for deeper analysis...`;
+        } else if (urlCheck.isSuspicious) {
+          resultDiv.className = 'result suspicious';
+          resultDiv.textContent = `⚠️ URL Analysis: ${urlCheck.reason}\n\nFetching webpage content for deeper analysis...`;
+        } else {
+          resultDiv.textContent = '✓ URL appears safe. Fetching webpage content for deeper analysis...';
+        }
+
+        // Fetch and analyze the webpage content
+        const htmlContent = await fetchWebpageContent(url);
+        const contentAnalysis = analyzeWebpageContent(htmlContent);
+
+        if (contentAnalysis.isSafe && (urlCheck.isSafe || urlCheck.isSuspicious === undefined)) {
+          resultDiv.className = 'result safe';
+          resultDiv.textContent = '✓ Full webpage scan complete: No phishing indicators detected.';
+        } else {
+          resultDiv.className = 'result phishing';
+          let resultText = '⚠️ Full webpage scan detected potential phishing:\n';
+
+          if (urlCheck.isPhishing || urlCheck.isSuspicious) {
+            resultText += `• URL Issue: ${urlCheck.reason}\n`;
+          }
+
+          if (!contentAnalysis.isSafe) {
+            resultText += `• Content Issues:\n  - ${contentAnalysis.reasons.join('\n  - ')}`;
+          }
+
+          resultDiv.textContent = resultText;
+          resultDiv.style.whiteSpace = 'pre-line';
+        }
+
+      } catch (error) {
+        resultDiv.className = 'result phishing';
+        resultDiv.textContent = `⚠️ Error scanning webpage: ${error.message}\n\nThis may occur due to:\n• CORS restrictions\n• Site blocking automated requests\n• Network issues\n• Invalid URL\n\nTry using "Paste HTML" mode instead.`;
+        resultDiv.style.whiteSpace = 'pre-line';
+      } finally {
+        // Reset button
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
       }
     });
   </script>

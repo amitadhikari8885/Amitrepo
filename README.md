@@ -20,20 +20,27 @@ A comprehensive web-based tool to detect potential phishing attempts through bot
   - Analyzes external links for suspicious destinations
   - Checks for insecure HTTP usage
 
+- **Full Webpage Scan Mode**:
+  - Automatically fetches complete webpage content from URL
+  - Combines URL analysis with deep content inspection
+  - Real-time scanning with loading indicators
+  - Comprehensive threat detection across entire pages
+
 #### Usage
 1. Open `phishing-detector.html` in a web browser
 2. Choose analysis mode:
-   - **URL Analysis**: Enter a URL and click "Check URL"
-   - **Webpage Content Analysis**: Paste the HTML source of a suspicious page and click "Analyze Webpage"
+   - **URL Analysis**: Quick URL-based checking
+   - **Paste HTML**: Analyze copied webpage source code
+   - **Full Webpage Scan**: Enter URL to automatically fetch and scan entire webpage
 3. View detailed results with specific reasons for any detected threats
 
 #### What Makes This Different
-Unlike basic URL checkers, this tool performs deep content analysis of webpage HTML to detect sophisticated phishing techniques including:
-- Obfuscated malicious scripts
-- Fake login forms
-- Psychological manipulation through urgency
-- Hidden data collection elements
-- Suspicious external link patterns
+Unlike basic URL checkers, this tool performs comprehensive analysis including:
+- **Automated webpage fetching** with CORS proxy integration
+- **Deep content analysis** of HTML, scripts, and links
+- **Multi-layered detection** combining URL and content-based heuristics
+- **Real-time scanning** of live websites
+- **Educational CEH tool** demonstrating advanced phishing detection techniques
 
 #### Files
 - `phishing-detector.html`: The main detector application
