@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Phishing URL Detector</title>
+  <title>Advanced Phishing Detector</title>
   <style>
     * {
       margin: 0;
@@ -36,6 +36,28 @@
       color: #333;
     }
 
+    .mode-selector {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .mode-selector button {
+      padding: 10px 20px;
+      margin: 0 5px;
+      border: 1px solid #ddd;
+      background: white;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.3s;
+    }
+
+    .mode-selector button.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
     .form-group {
       margin-bottom: 20px;
     }
@@ -57,6 +79,24 @@
     }
 
     input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: monospace;
+      resize: vertical;
+      min-height: 200px;
+      transition: border-color 0.3s;
+    }
+
+    textarea:focus {
       outline: none;
       border-color: #667eea;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
@@ -109,7 +149,12 @@
 <body>
 
   <div class="container">
-    <h2>Phishing URL Detector</h2>
+    <h2>Advanced Phishing Detector</h2>
+
+    <div class="mode-selector">
+      <button id="urlMode" class="active">URL Analysis</button>
+      <button id="webpageMode">Webpage Content Analysis</button>
+    </div>
 
     <form id="urlForm">
       <div class="form-group">
@@ -120,12 +165,40 @@
       <button type="submit">Check URL</button>
     </form>
 
+    <form id="webpageForm" style="display: none;">
+      <div class="form-group">
+        <label for="htmlContent">Paste Webpage HTML Source</label>
+        <textarea id="htmlContent" placeholder="Paste the HTML source code of the suspicious webpage here..." required></textarea>
+      </div>
+
+      <button type="submit">Analyze Webpage</button>
+
     <div id="result" class="result" style="display: none;"></div>
   </div>
 
   <script>
-    const form = document.getElementById('urlForm');
+    const urlForm = document.getElementById('urlForm');
+    const webpageForm = document.getElementById('webpageForm');
     const resultDiv = document.getElementById('result');
+    const urlModeBtn = document.getElementById('urlMode');
+    const webpageModeBtn = document.getElementById('webpageMode');
+
+    // Mode switching
+    urlModeBtn.addEventListener('click', () => {
+      urlForm.style.display = 'block';
+      webpageForm.style.display = 'none';
+      urlModeBtn.classList.add('active');
+      webpageModeBtn.classList.remove('active');
+      resultDiv.style.display = 'none';
+    });
+
+    webpageModeBtn.addEventListener('click', () => {
+      urlForm.style.display = 'none';
+      webpageForm.style.display = 'block';
+      webpageModeBtn.classList.add('active');
+      urlModeBtn.classList.remove('active');
+      resultDiv.style.display = 'none';
+    });
 
     function isPhishingURL(url) {
       try {
@@ -176,7 +249,83 @@
       }
     }
 
-    form.addEventListener('submit', function(e) {
+    function analyzeWebpageContent(htmlContent) {
+      const issues = [];
+      const lowerHtml = htmlContent.toLowerCase();
+
+      // Check for login forms
+      if (lowerHtml.includes('<form') && (lowerHtml.includes('password') || lowerHtml.includes('login'))) {
+        issues.push('Contains login form - potential credential harvesting');
+      }
+
+      // Check for hidden inputs (common in phishing)
+      const hiddenInputs = (htmlContent.match(/<input[^>]*type="hidden"/gi) || []).length;
+      if (hiddenInputs > 2) {
+        issues.push('Multiple hidden input fields detected');
+      }
+
+      // Check for suspicious scripts
+      if (lowerHtml.includes('eval(') || lowerHtml.includes('document.write') || lowerHtml.includes('innerHTML')) {
+        issues.push('Contains potentially malicious JavaScript');
+      }
+
+      // Check for obfuscated code
+      const scriptTags = htmlContent.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || [];
+      for (let script of scriptTags) {
+        const scriptContent = script.replace(/<script[^>]*>|<\/script>/gi, '');
+        if (scriptContent.length > 1000 && scriptContent.includes('function') === false) {
+          issues.push('Large obfuscated script detected');
+          break;
+        }
+      }
+
+      // Check for urgency language
+      const urgencyWords = ['urgent', 'immediate', 'action required', 'account suspended', 'verify now', 'limited time'];
+      for (let word of urgencyWords) {
+        if (lowerHtml.includes(word)) {
+          issues.push(`Contains urgency language: "${word}"`);
+          break;
+        }
+      }
+
+      // Check for fake branding
+      const brands = ['paypal', 'amazon', 'bank of america', 'chase', 'wells fargo'];
+      for (let brand of brands) {
+        if (lowerHtml.includes(brand) && !lowerHtml.includes(brand + '.com')) {
+          issues.push(`Potential fake branding: "${brand}"`);
+          break;
+        }
+      }
+
+      // Check for external links to suspicious domains
+      const links = htmlContent.match(/href="([^"]*)"/gi) || [];
+      let suspiciousLinks = 0;
+      for (let link of links) {
+        const url = link.replace(/href="/, '').replace(/"/, '');
+        if (url.startsWith('http') && !url.includes('google') && !url.includes('facebook')) {
+          const check = isPhishingURL(url);
+          if (check.isPhishing || check.isSuspicious) {
+            suspiciousLinks++;
+          }
+        }
+      }
+      if (suspiciousLinks > 0) {
+        issues.push(`${suspiciousLinks} suspicious external links found`);
+      }
+
+      // Check for missing security headers simulation
+      if (!lowerHtml.includes('https://') && lowerHtml.includes('http://')) {
+        issues.push('Uses insecure HTTP links');
+      }
+
+      if (issues.length === 0) {
+        return { isSafe: true };
+      } else {
+        return { isPhishing: true, reasons: issues };
+      }
+    }
+
+    urlForm.addEventListener('submit', function(e) {
       e.preventDefault();
 
       const url = document.getElementById('url').value.trim();
@@ -193,6 +342,24 @@
       } else if (check.isSuspicious) {
         resultDiv.className = 'result suspicious';
         resultDiv.textContent = `⚠️ Suspicious URL: ${check.reason}. Proceed with caution.`;
+      }
+    });
+
+    webpageForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const htmlContent = document.getElementById('htmlContent').value.trim();
+      const analysis = analyzeWebpageContent(htmlContent);
+
+      resultDiv.style.display = 'block';
+
+      if (analysis.isSafe) {
+        resultDiv.className = 'result safe';
+        resultDiv.textContent = '✓ This webpage content appears to be safe.';
+      } else {
+        resultDiv.className = 'result phishing';
+        resultDiv.textContent = `⚠️ Potential phishing detected:\n• ${analysis.reasons.join('\n• ')}`;
+        resultDiv.style.whiteSpace = 'pre-line';
       }
     });
   </script>
