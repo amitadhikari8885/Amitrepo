@@ -132,10 +132,16 @@
       box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
     }
 
+    input:invalid, textarea:invalid {
+      border-color: var(--clr-danger);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    }
+
     textarea {
-      font-family: 'Consolas', 'Monaco', monospace;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
       min-height: 180px;
       resize: vertical;
+      line-height: 1.4;
     }
 
     .note {
@@ -208,6 +214,24 @@
     button[type="submit"]:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+      position: relative;
+    }
+
+    button[type="submit"]:disabled::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      margin: auto;
+      border: 2px solid transparent;
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     #result {
@@ -244,8 +268,20 @@
     .status-danger { background: var(--clr-danger); color: white; }
 
     @media (max-width: 480px) {
-      .main-content { padding: 24px; }
-      .header { padding: 24px 20px 16px; }
+      body { padding: 16px; }
+      .container { max-width: 100%; }
+      .main-content { padding: 20px; }
+      .header { padding: 20px 16px 16px; }
+      .header h1 { font-size: 1.5rem; }
+      .mode-tabs button { padding: 12px 8px; font-size: 0.9rem; }
+      input, textarea { font-size: 16px; } /* Prevent zoom on iOS */
+      button[type="submit"] { padding: 16px; font-size: 1rem; }
+    }
+
+    @media (max-width: 360px) {
+      .header { padding: 16px 12px 12px; }
+      .main-content { padding: 16px; }
+      .mode-tabs button { padding: 10px 6px; font-size: 0.85rem; }
     }
   </style>
 </head>
@@ -298,6 +334,7 @@
           <li>Provides comprehensive security assessment</li>
         </ul>
         <p><strong>Note:</strong> Some websites block automated requests. If scanning fails, try copying the page source manually and use "Paste HTML" mode instead.</p>
+        <p><strong>Keyboard shortcuts:</strong> Ctrl+1 (URL), Ctrl+2 (HTML), Ctrl+3 (Full Scan), Ctrl+Enter (Submit)</p>
       </div>
     </form>
 
@@ -318,15 +355,18 @@
 
 const PHISHING_KEYWORDS = [
   'login', 'signin', 'account', 'verify', 'update', 'secure', 'banking',
-  'paypal', 'amazon', 'office365', 'microsoft', 'chase', 'wellsfargo'
+  'paypal', 'amazon', 'office365', 'microsoft', 'chase', 'wellsfargo',
+  'password', 'credential', 'authenticate', 'confirm', 'validate'
 ];
 
 const URGENCY_PHRASES = [
   'urgent', 'immediate', 'action required', 'account will be suspended',
-  'verify now', 'limited time', 'your account is on hold'
+  'verify now', 'limited time', 'do not ignore', 'important notice',
+  'security alert', 'account verification', 'payment required', 'suspension warning',
+  'time sensitive', 'expires soon', 'act fast', 'respond immediately'
 ];
 
-const COMMON_SHORTENERS = ['bit.ly','tinyurl.com','goo.gl','t.co','is.gd','ow.ly'];
+const COMMON_SHORTENERS = ['bit.ly','tinyurl.com','goo.gl','t.co','is.gd','ow.ly', 'tiny.cc', 'cli.gs', 'su.pr', 'buff.ly'];
 
 // ────────────────────────────────────────────────
 // DOM Elements
@@ -358,11 +398,19 @@ function showResult(type, title, details = '') {
   resultEl.hidden = false;
   resultEl.className = `result ${type}`;
   resultEl.innerHTML = `
-    <div style="font-size:1.15rem; font-weight:600; margin-bottom:8px;">
-      <span class="result-icon">${getIcon(type)}</span>${title}
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+      <div style="font-size:1.15rem; font-weight:600;">
+        <span class="result-icon">${getIcon(type)}</span>${title}
+      </div>
+      <button onclick="clearResult()" style="background: none; border: none; color: inherit; cursor: pointer; font-size: 1.2rem; opacity: 0.7;" title="Clear result">×</button>
     </div>
-    ${details ? `<div style="margin-top:12px;">${details}</div>` : ''}
+    ${details ? `<div style="margin-top:8px;">${details}</div>` : ''}
   `;
+}
+
+function clearResult() {
+  resultEl.hidden = true;
+  resultEl.innerHTML = '';
 }
 
 function getIcon(type) {
@@ -581,7 +629,9 @@ async function fetchHtml(url) {
   const proxies = [
     'https://api.allorigins.win/raw?url=',
     'https://cors-anywhere.herokuapp.com/',
-    'https://thingproxy.freeboard.io/fetch/'
+    'https://thingproxy.freeboard.io/fetch/',
+    'https://api.codetabs.com/v1/proxy?quest=',
+    'https://proxy.cors.sh/'
   ];
 
   let lastError;
@@ -592,12 +642,17 @@ async function fetchHtml(url) {
 
       // Add timeout to prevent hanging
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
       const response = await fetch(proxy + encodeURIComponent(url), {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1'
         }
       });
 
@@ -612,6 +667,13 @@ async function fetchHtml(url) {
       // Basic validation - check if we got actual HTML
       if (html.length < 50 || !html.includes('<')) {
         throw new Error('Invalid HTML response received');
+      }
+
+      // Additional validation - check for common error pages
+      if (html.toLowerCase().includes('access denied') ||
+          html.toLowerCase().includes('403 forbidden') ||
+          html.toLowerCase().includes('blocked')) {
+        throw new Error('Website blocked the request');
       }
 
       console.log(`Successfully fetched ${html.length} characters from ${url}`);
@@ -629,8 +691,8 @@ async function fetchHtml(url) {
     `Could not fetch webpage. This may be due to:\n` +
     `• CORS restrictions on the target site\n` +
     `• Network connectivity issues\n` +
-    `• Site blocking automated requests\n\n` +
-    `Try using "Paste HTML" mode instead by copying the page source manually.\n\n` +
+    `• Site blocking automated requests\n` +
+    `• All proxy services temporarily unavailable\n\n` +
     `Technical details: ${lastError?.message || 'All proxy services failed'}`
   );
 }
@@ -645,36 +707,134 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.addEventListener('click', () => showForm(btn.dataset.mode));
   });
 
+  // Keyboard shortcuts
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key) {
+        case '1':
+          e.preventDefault();
+          showForm('url');
+          break;
+        case '2':
+          e.preventDefault();
+          showForm('html');
+          break;
+        case '3':
+          e.preventDefault();
+          showForm('fetch');
+          break;
+        case 'Enter':
+          // Submit the currently visible form
+          const visibleForm = document.querySelector('form:not([hidden])');
+          if (visibleForm) {
+            e.preventDefault();
+            visibleForm.dispatchEvent(new Event('submit'));
+          }
+          break;
+      }
+    }
+  });
+
   // URL form
   forms.url.addEventListener('submit', e => {
     e.preventDefault();
-    const url = forms.url.querySelector('input').value.trim();
-    const verdict = checkUrlSafety(url);
+    const input = forms.url.querySelector('input');
+    const url = input.value.trim();
 
-    if (!verdict.safe) {
-      showResult(
-        verdict.issues.some(i => i.includes('Invalid')) ? 'error' : 'danger',
-        'Potentially dangerous URL',
-        verdict.issues.map(i => `• ${i}`).join('\n')
-      );
-    } else {
-      showResult('safe', 'This URL looks safe');
+    // Clear previous results
+    showResult('warning', '🔍 Analyzing URL...', 'Checking URL for security indicators...');
+
+    // Basic validation
+    if (!url) {
+      showResult('error', 'URL Required', 'Please enter a valid URL to scan.');
+      input.focus();
+      return;
+    }
+
+    // Enhanced URL validation
+    try {
+      const urlObj = new URL(url);
+      if (!['http:', 'https:'].includes(urlObj.protocol)) {
+        showResult('error', 'Invalid Protocol', 'Only HTTP and HTTPS URLs are supported.');
+        input.focus();
+        return;
+      }
+    } catch {
+      showResult('error', 'Invalid URL', 'Please enter a valid URL starting with http:// or https://');
+      input.focus();
+      return;
+    }
+
+    try {
+      const verdict = checkUrlSafety(url);
+
+      if (!verdict.safe && !verdict.suspicious) {
+        // Invalid URL format
+        showResult('error', 'Invalid URL Format', verdict.issues.join('\n'));
+      } else if (!verdict.safe) {
+        showResult(
+          verdict.suspicious ? 'warning' : 'danger',
+          verdict.suspicious ? '⚠️ Potentially Suspicious URL' : '🚨 Dangerous URL Detected',
+          verdict.issues.map(i => `• ${i}`).join('\n')
+        );
+      } else {
+        showResult('safe', '✅ URL Appears Safe', 'No obvious security issues detected with this URL.');
+      }
+    } catch (error) {
+      console.error('URL analysis error:', error);
+      showResult('error', 'Analysis Error', 'An error occurred while analyzing the URL. Please try again.');
     }
   });
 
   // HTML paste form
   forms.html.addEventListener('submit', e => {
     e.preventDefault();
-    const html = forms.html.querySelector('textarea').value.trim();
-    if (!html) return;
+    const textarea = forms.html.querySelector('textarea');
+    const html = textarea.value.trim();
 
-    const analysis = analyzeHtmlContent(html);
+    // Clear previous results
+    showResult('warning', '🔍 Analyzing HTML...', 'Scanning content for phishing indicators...');
 
-    showResult(
-      analysis.safe ? 'safe' : 'danger',
-      analysis.safe ? 'No clear phishing indicators found' : 'Potential phishing content detected',
-      analysis.safe ? '' : analysis.issues.map(i => `• ${i}`).join('\n')
-    );
+    if (!html) {
+      showResult('error', 'HTML Required', 'Please paste some HTML content to analyze.');
+      textarea.focus();
+      return;
+    }
+
+    if (html.length < 10) {
+      showResult('error', 'Insufficient Content', 'Please provide more HTML content for analysis.');
+      textarea.focus();
+      return;
+    }
+
+    try {
+      const analysis = analyzeHtmlContent(html);
+
+      let type = 'safe';
+      let title = '✅ No Phishing Indicators Found';
+      let details = '';
+
+      if (analysis.safe) {
+        details = 'The provided HTML content appears to be safe.\n\n';
+        details += `📊 Analysis Summary:\n`;
+        details += `• ${analysis.stats.forms} form(s) detected\n`;
+        details += `• ${analysis.stats.scripts} script(s) found\n`;
+        details += `• ${analysis.stats.externalLinks} external link(s)\n`;
+        details += `• ${analysis.stats.hiddenFields} hidden field(s)\n\n`;
+        details += 'No suspicious patterns or phishing indicators were detected.';
+      } else {
+        type = 'danger';
+        title = '🚨 Potential Phishing Content Detected';
+        details = `Found ${analysis.issues.length} potential security issue(s):\n\n`;
+        details += analysis.issues.map(i => `• ${i}`).join('\n');
+        details += '\n\n⚠️ This content may be malicious. Exercise caution!';
+      }
+
+      showResult(type, title, details);
+    } catch (error) {
+      console.error('HTML analysis error:', error);
+      showResult('error', 'Analysis Error', 'An error occurred while analyzing the HTML content. Please check the format and try again.');
+    }
   });
 
   // Full fetch form
