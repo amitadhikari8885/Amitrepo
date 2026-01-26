@@ -1,10 +1,10 @@
 # 🔒 Advanced Phishing Detector
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-16+-green.svg)](https://nodejs.org/)
-[![Jest](https://img.shields.io/badge/Tested%20with-Jest-99424f.svg)](https://jestjs.io/)
-[![ESLint](https://img.shields.io/badge/Code%20Style-ESLint-4B32C3.svg)](https://eslint.org/)
-[![Prettier](https://img.shields.io/badge/Code%20Style-Prettier-F7B93E.svg)](https://prettier.io/)
+[![Standalone](https://img.shields.io/badge/Type-Standalone%20HTML-blue.svg)](https://en.wikipedia.org/wiki/HTML)
+[![Browser](https://img.shields.io/badge/Browser-Compatible-green.svg)](https://developer.mozilla.org/en-US/docs/Web/HTML)
+[![Zero Dependencies](https://img.shields.io/badge/Dependencies-None-orange.svg)](https://en.wikipedia.org/wiki/Dependency_hell)
+[![Offline](https://img.shields.io/badge/Works-Offline-purple.svg)](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Offline_Service_workers)
 
 > **Revolutionizing phishing detection through intelligent, multi-layered analysis**
 
@@ -29,35 +29,60 @@ Welcome to **Advanced Phishing Detector** - a cutting-edge cybersecurity tool de
 ## ✨ Latest Updates
 
 ### Version Highlights
-- **Professional Architecture**: Complete codebase restructuring with modular design
-- **Enhanced Build System**: Automated build pipelines with cross-platform support
-- **Comprehensive Testing**: Full test coverage with Jest framework
-- **Code Quality**: ESLint and Prettier integration for consistent standards
-- **Documentation**: Professional README with detailed usage guides and API documentation
+- **Standalone Conversion**: Complete migration from full-stack to single-file HTML application
+- **Zero Dependencies**: No server setup, databases, or external libraries required
+- **Offline Capability**: Works completely offline in any modern web browser
+- **Cross-Platform**: Compatible with Windows, macOS, Linux, and mobile devices
+- **Simplified Distribution**: Single HTML file can be shared and deployed instantly
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 16+ and npm
-- Modern web browser with JavaScript enabled
+### Standalone Version (Recommended)
+**No installation required!** Just open the HTML file in your browser:
 
-### Installation
+1. Download `phishing-detector-standalone.html`
+2. Open it in any modern web browser (Chrome, Firefox, Safari, Edge)
+3. Start scanning URLs and content immediately
+
+**Features:**
+- ✅ Works completely offline
+- ✅ No server setup needed
+- ✅ No dependencies to install
+- ✅ All detection logic embedded
+- ✅ Cross-platform compatible
+
+### Method 1: URL Analysis (Quick Check)
+1. Select **"URL Check"** mode
+2. Enter suspicious URL: `https://example-bank-login.com`
+3. Click **"Analyze URL"**
+4. Review instant threat assessment
+
+### Method 2: HTML Content Analysis
+1. Choose **"HTML Paste"** mode
+2. Copy and paste suspicious webpage HTML source
+3. Click **"Analyze HTML"**
+4. Study detailed content analysis
+
+### Method 3: Full Webpage Scan (Automated)
+1. Choose **"Full Page Scan"** mode
+2. Input target URL: `https://suspicious-site.com`
+3. Click **"Fetch & Analyze"**
+4. Watch real-time analysis progress
+5. Study comprehensive threat report
+
+### Legacy Development Setup
+If you want to modify the code or run tests:
+
 ```bash
-# Clone the repository
-git clone https://github.com/amitadhikari8885/Amitrepo.git
-cd Amitrepo
-
 # Install dependencies
 npm install
 
-# Build the project
+# Run tests
+npm test
+
+# Build for distribution
 npm run build
-
-# Start development server
-npm run dev
 ```
-
-Open `http://localhost:8000` in your browser and navigate to `dist/index.html`.
 
 ## 🎯 Core Features
 
@@ -178,71 +203,61 @@ if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
 
 ```
 advanced-phishing-detector/
-├── src/                          # Source code
-│   ├── css/
-│   │   └── styles.css           # Application styles
-│   └── js/
-│       └── detector.js          # Core detection logic
-├── tests/                        # Test files
-│   └── detector.test.js         # Unit tests
-├── scripts/                      # Build scripts
-│   ├── build.js                 # JavaScript build automation
-│   └── build.ps1                # PowerShell build automation
-├── dist/                         # Built application (generated)
-│   ├── index.html               # Main application entry point
-│   ├── src/                     # Built source files
-│   ├── package.json             # Built package configuration
-│   └── README.md                # Built documentation
-├── phishing-detector.html        # Development HTML file
-├── package.json                  # Node.js configuration
-├── jest.config.js                # Test configuration
-├── eslint.config.js              # Linting configuration
-├── .prettierrc                   # Code formatting rules
-├── .gitignore                    # Git ignore rules
-├── Makefile                      # Additional build automation
-├── LICENSE                       # MIT license
-├── CONTRIBUTING.md               # Contribution guidelines
-└── README.md                     # This documentation
+├── phishing-detector-standalone.html  # Complete standalone application
+├── ceh-plan.yml                      # Project planning document
+├── index.html                        # Simple redirect to standalone version
+├── package.json                      # Root package configuration (legacy)
+├── README.md                         # This documentation
+└── LICENSE                           # MIT license
 ```
+
+### Standalone Architecture
+- **Single File Design**: All HTML, CSS, and JavaScript embedded in one file
+- **Zero Dependencies**: No external libraries or frameworks required
+- **Browser Native**: Uses modern browser APIs (fetch, URL, DOM)
+- **CORS Proxy Integration**: Multiple fallback services for cross-origin requests
+- **Responsive UI**: Mobile-friendly interface with professional styling
 
 ## 🧪 Development
 
-### Available Scripts
+### Standalone Development
+Since this is now a single HTML file, development is straightforward:
+
+1. **Edit the HTML file**: Open `phishing-detector-standalone.html` in any code editor
+2. **Modify JavaScript**: Update detection logic in the embedded `<script>` tag
+3. **Update CSS**: Modify styles in the embedded `<style>` tag
+4. **Test changes**: Open the file in a browser to test modifications
+
+### Development Workflow
 ```bash
-npm run build      # Build the project
-npm run dev        # Start development server
-npm run test       # Run tests
-npm run lint       # Check code style
-npm run format     # Format code
-npm run clean      # Clean build artifacts
+# No setup required - just edit and test
+code phishing-detector-standalone.html  # Open in VS Code
+# Make your changes
+# Open in browser to test
 ```
 
-### Testing
+### Code Organization
+The standalone file contains:
+- **HTML Structure**: Complete page layout and UI elements
+- **CSS Styling**: Responsive design with professional appearance
+- **JavaScript Logic**: All detection algorithms and event handlers
+- **Embedded Assets**: No external dependencies or files needed
+
+### Testing the Standalone Version
 ```bash
-# Run all tests
-npm test
+# Simply open in browser
+start phishing-detector-standalone.html
 
-# Run tests in watch mode
-npm run test:watch
-
-# Run with coverage
-npm test -- --coverage
+# Or serve locally if needed
+python -m http.server 8000
+# Then visit http://localhost:8000/phishing-detector-standalone.html
 ```
 
-### Code Quality
-```bash
-# Lint code
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-
-# Format code
-npm run format
-
-# Check formatting
-npm run format:check
-```
+### Customization
+- **Add new detection rules**: Modify the `checkUrlSafety()` and `analyzeHtmlContent()` functions
+- **Update UI**: Change CSS classes and HTML structure
+- **Add features**: Extend JavaScript functionality within the single file
+- **Theme changes**: Modify color schemes and styling in the `<style>` section
 
 ## 🎓 Educational Value
 

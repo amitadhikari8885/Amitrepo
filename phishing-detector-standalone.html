@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Advanced Phishing Detector - Standalone</title>
+  <meta name="description" content="Check URLs and webpage content for common phishing indicators. Stay safe online. Works completely offline."/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --clr-primary:   #4f46e5;    /* indigo-600 */
+      --clr-primary-d: #4338ca;    /* indigo-700 */
+      --clr-safe:      #10b981;    /* emerald-500 */
+      --clr-warning:   #f59e0b;    /* amber-500 */
+      --clr-danger:    #ef4444;    /* red-500 */
+      --clr-gray-50:   #f9fafb;
+      --clr-gray-100:  #f3f4f6;
+      --clr-gray-600:  #4b5563;
+      --clr-gray-800:  #1f2937;
+      --shadow-sm:     0 1px 3px rgba(0,0,0,0.1);
+      --shadow-md:     0 4px 12px rgba(0,0,0,0.12);
+      --radius-md:     10px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      color: var(--clr-gray-800);
+    }
+
+    .container {
+      background: white;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      width: 100%;
+      max-width: 560px;
+      overflow: hidden;
+    }
+
+    .header {
+      background: var(--clr-primary);
+      color: white;
+      padding: 28px 32px 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 0.95rem;
+    }
+
+    .main-content {
+      padding: 32px;
+    }
+
+    .mode-tabs {
+      display: flex;
+      border-bottom: 2px solid var(--clr-gray-100);
+      margin-bottom: 28px;
+    }
+
+    .mode-tabs button {
+      flex: 1;
+      padding: 14px;
+      background: none;
+      border: none;
+      font-weight: 600;
+      color: var(--clr-gray-600);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .mode-tabs button.active {
+      color: var(--clr-primary);
+    }
+
+    .mode-tabs button.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--clr-primary);
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--clr-gray-800);
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    textarea {
+      font-family: 'Consolas', 'Monaco', monospace;
+      min-height: 180px;
+      resize: vertical;
+    }
+
+    .note {
+      font-size: 0.82rem;
+      color: var(--clr-gray-600);
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+
+    .help-text {
+      font-size: 0.85rem;
+      color: var(--clr-gray-600);
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    .info-box {
+      margin-top: 20px;
+      padding: 16px;
+      background: var(--clr-gray-50);
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .info-box h4 {
+      margin: 0 0 12px 0;
+      color: var(--clr-primary);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .info-box ul {
+      margin: 0 0 12px 0;
+      padding-left: 20px;
+    }
+
+    .info-box li {
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+
+    .info-box p {
+      margin: 0;
+      line-height: 1.4;
+      color: var(--clr-gray-700);
+    }
+
+    .info-box strong {
+      color: var(--clr-gray-800);
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 14px;
+      background: var(--clr-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button[type="submit"]:hover:not(:disabled) {
+      background: var(--clr-primary-d);
+    }
+
+    button[type="submit"]:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #result {
+      margin-top: 28px;
+      padding: 20px;
+      border-radius: 8px;
+      line-height: 1.5;
+      font-weight: 500;
+      white-space: pre-line;
+    }
+
+    #result.safe     { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    #result.warning  { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+    #result.danger   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    #result.error    { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+
+    .result-icon {
+      font-size: 1.4rem;
+      margin-right: 8px;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-left: 8px;
+    }
+
+    .status-safe { background: var(--clr-safe); color: white; }
+    .status-warning { background: var(--clr-warning); color: white; }
+    .status-danger { background: var(--clr-danger); color: white; }
+
+    @media (max-width: 480px) {
+      .main-content { padding: 24px; }
+      .header { padding: 24px 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Advanced Phishing Detector</h1>
+    <p>Detect phishing attempts — URL check & webpage analysis</p>
+    <div class="status-indicator status-safe">Standalone Mode</div>
+  </div>
+
+  <div class="main-content">
+
+    <div class="mode-tabs">
+      <button class="active" data-mode="url">URL Check</button>
+      <button data-mode="html">HTML Paste</button>
+      <button data-mode="fetch">Full Page Scan</button>
+    </div>
+
+    <form id="urlForm">
+      <div class="form-group">
+        <label for="urlInput">URL to analyze</label>
+        <input type="url" id="urlInput" placeholder="https://example.com" required autocomplete="off"/>
+      </div>
+      <button type="submit">Analyze URL</button>
+    </form>
+
+    <form id="htmlForm" hidden>
+      <div class="form-group">
+        <label for="htmlInput">Paste suspicious webpage HTML source</label>
+        <textarea id="htmlInput" placeholder="Right-click → View Page Source → copy & paste here..." required></textarea>
+      </div>
+      <button type="submit">Analyze HTML</button>
+    </form>
+
+    <form id="fetchForm" hidden>
+      <div class="form-group">
+        <label for="fetchUrl">🌐 URL of webpage to scan</label>
+        <input type="url" id="fetchUrl" placeholder="https://example-suspicious-site.com" required autocomplete="off"/>
+        <small class="help-text">Enter the full URL of the webpage you want to analyze for phishing indicators</small>
+      </div>
+      <button type="submit">🚀 Fetch & Analyze</button>
+      <div class="info-box">
+        <h4>ℹ️ How Full Page Scan Works</h4>
+        <ul>
+          <li>Automatically fetches the webpage HTML content</li>
+          <li>Analyzes URL structure for suspicious patterns</li>
+          <li>Scans HTML for phishing indicators (forms, scripts, urgency language)</li>
+          <li>Provides comprehensive security assessment</li>
+        </ul>
+        <p><strong>Note:</strong> Some websites block automated requests. If scanning fails, try copying the page source manually and use "Paste HTML" mode instead.</p>
+      </div>
+    </form>
+
+    <div id="result" hidden></div>
+
+  </div>
+</div>
+
+<script>
+// ────────────────────────────────────────────────
+// Advanced Phishing Detector - Standalone Version
+// All detection logic embedded in single HTML file
+// ────────────────────────────────────────────────
+
+// ────────────────────────────────────────────────
+// Constants & Configuration
+// ────────────────────────────────────────────────
+
+const PHISHING_KEYWORDS = [
+  'login', 'signin', 'account', 'verify', 'update', 'secure', 'banking',
+  'paypal', 'amazon', 'office365', 'microsoft', 'chase', 'wellsfargo'
+];
+
+const URGENCY_PHRASES = [
+  'urgent', 'immediate', 'action required', 'account will be suspended',
+  'verify now', 'limited time', 'your account is on hold'
+];
+
+const COMMON_SHORTENERS = ['bit.ly','tinyurl.com','goo.gl','t.co','is.gd','ow.ly'];
+
+// ────────────────────────────────────────────────
+// DOM Elements
+// ────────────────────────────────────────────────
+
+const forms = {
+  url:   document.getElementById('urlForm'),
+  html:  document.getElementById('htmlForm'),
+  fetch: document.getElementById('fetchForm')
+};
+
+const resultEl = document.getElementById('result');
+
+// ────────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────────
+
+function showForm(mode) {
+  Object.values(forms).forEach(f => f.hidden = true);
+  forms[mode].hidden = false;
+  resultEl.hidden = true;
+
+  document.querySelectorAll('.mode-tabs button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+}
+
+function showResult(type, title, details = '') {
+  resultEl.hidden = false;
+  resultEl.className = `result ${type}`;
+  resultEl.innerHTML = `
+    <div style="font-size:1.15rem; font-weight:600; margin-bottom:8px;">
+      <span class="result-icon">${getIcon(type)}</span>${title}
+    </div>
+    ${details ? `<div style="margin-top:12px;">${details}</div>` : ''}
+  `;
+}
+
+function getIcon(type) {
+  return type === 'safe'    ? '✓'   :
+         type === 'warning' ? '⚠️'  :
+         type === 'danger'  ? '❗'   : 'ℹ️';
+}
+
+function extractDomain(urlStr) {
+  try {
+    return new URL(urlStr).hostname.toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
+// ────────────────────────────────────────────────
+// Core Detection Logic
+// ────────────────────────────────────────────────
+
+function checkUrlSafety(urlStr) {
+  try {
+    const url = new URL(urlStr);
+    const hostname = url.hostname.toLowerCase();
+    const domain = hostname.replace(/^www\./, '');
+
+    const issues = [];
+
+    if (url.protocol !== 'https:') {
+      issues.push('Insecure protocol (not HTTPS)');
+    }
+
+    if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) {
+      issues.push('Uses raw IP address');
+    }
+
+    if (COMMON_SHORTENERS.some(s => hostname === s || hostname.endsWith('.' + s))) {
+      issues.push('Uses URL shortener');
+    }
+
+    const subdomainCount = hostname.split('.').length - 1;
+    if (subdomainCount > 3) {
+      issues.push('Excessive subdomains');
+    }
+
+    if (domain.length < 5 || domain.length > 45) {
+      issues.push('Unusual domain length');
+    }
+
+    for (const kw of PHISHING_KEYWORDS) {
+      if (domain.includes(kw)) {
+        issues.push(`Suspicious keyword in domain: ${kw}`);
+        break;
+      }
+    }
+
+    return {
+      safe: issues.length === 0,
+      suspicious: issues.length > 0 && issues.length <= 2,
+      issues
+    };
+  } catch {
+    return { safe: false, suspicious: false, issues: ['Invalid URL format'] };
+  }
+}
+
+function analyzeHtmlContent(html) {
+  const lower = html.toLowerCase();
+  const issues = [];
+
+  // Login form detection (improved)
+  const formRegex = /<form[^>]*>[\s\S]*?<\/form>/gi;
+  const forms = html.match(formRegex) || [];
+
+  for (const form of forms) {
+    const formLower = form.toLowerCase();
+    if (formLower.includes('password') || formLower.includes('pass') ||
+        formLower.includes('pwd') || formLower.includes('login') ||
+        formLower.includes('signin') || formLower.includes('auth')) {
+      issues.push('Contains login/authentication form');
+      break;
+    }
+  }
+
+  // Hidden fields abuse (improved threshold and detection)
+  const hiddenInputs = html.match(/<input[^>]*type\s*=\s*["']hidden["'][^>]*>/gi) || [];
+  if (hiddenInputs.length > 2) {
+    issues.push(`Multiple hidden form fields detected (${hiddenInputs.length})`);
+  }
+
+  // Suspicious form actions
+  const actionMatches = html.match(/action\s*=\s*["']([^"']*)["']/gi) || [];
+  for (const match of actionMatches) {
+    const action = match.toLowerCase();
+    if (action.includes('http') && !action.includes(window.location.hostname.toLowerCase())) {
+      issues.push('Form submits to external domain');
+      break;
+    }
+  }
+
+  // Dangerous JavaScript patterns (expanded)
+  const dangerousJs = [
+    /eval\s*\(/,
+    /document\.write\s*\(/,
+    /innerHTML\s*=.*\+/,
+    /outerHTML\s*=/,
+    /setTimeout\s*\(\s*["'][^"']*javascript:/,
+    /setInterval\s*\(\s*["'][^"']*javascript:/,
+    /Function\s*\(\s*["'][^"']*\)/,
+    /atob\s*\(/,
+    /btoa\s*\(/,
+    /unescape\s*\(/,
+    /decodeURIComponent\s*\(\s*atob\s*\(/,
+    /location\s*=\s*["'][^"']*["']/,
+    /window\.location\s*=\s*["'][^"']*["']/,
+    /document\.location\s*=\s*["'][^"']*["']/
+  ];
+
+  for (const pattern of dangerousJs) {
+    if (pattern.test(html)) {
+      issues.push('Potentially dangerous JavaScript patterns detected');
+      break;
+    }
+  }
+
+  // Obfuscated scripts (improved detection)
+  const scripts = html.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || [];
+  for (const script of scripts) {
+    const content = script.replace(/<script[^>]*>|<\/script>/gi, '').trim();
+    // Check for very long lines (potential obfuscation)
+    const lines = content.split('\n');
+    if (lines.some(line => line.length > 500)) {
+      issues.push('Potentially obfuscated JavaScript code detected');
+      break;
+    }
+    // Check for excessive character repetition
+    if (/(.)\1{10,}/.test(content)) {
+      issues.push('Suspicious character repetition in JavaScript');
+      break;
+    }
+  }
+
+  // Urgency language (expanded list)
+  const urgencyPatterns = [
+    ...URGENCY_PHRASES,
+    'act now', 'immediate action', 'time sensitive', 'expires soon',
+    'limited offer', 'do not ignore', 'important notice', 'security alert',
+    'account verification', 'payment required', 'suspension warning'
+  ];
+
+  for (const phrase of urgencyPatterns) {
+    if (lower.includes(phrase)) {
+      issues.push(`Urgency/pressure language: "${phrase}"`);
+      break;
+    }
+  }
+
+  // Brand impersonation (expanded)
+  const brands = [
+    'paypal', 'amazon', 'office', 'microsoft', 'chase', 'wells fargo',
+    'bank of america', 'citibank', 'facebook', 'google', 'apple',
+    'netflix', 'instagram', 'linkedin', 'twitter', 'yahoo'
+  ];
+
+  for (const brand of brands) {
+    if (lower.includes(brand)) {
+      // Check if it's actually the legitimate domain
+      const domainPattern = new RegExp(`${brand.replace(/\s+/g, '')}\\.(com|net|org|edu)`, 'i');
+      if (!domainPattern.test(html)) {
+        issues.push(`Possible impersonation of: ${brand}`);
+        break;
+      }
+    }
+  }
+
+  // Suspicious redirects
+  const redirectPatterns = [
+    /window\.location\s*=/,
+    /location\.href\s*=.*http/,
+    /document\.location\s*=/,
+    /meta[^>]*http-equiv\s*=\s*["']refresh["']/i
+  ];
+
+  for (const pattern of redirectPatterns) {
+    if (pattern.test(html)) {
+      issues.push('Automatic redirects or location changes detected');
+      break;
+    }
+  }
+
+  // Fake security indicators
+  if (lower.includes('secure') && lower.includes('🔒') && !lower.includes('https://')) {
+    issues.push('Fake security indicators without HTTPS');
+  }
+
+  // Excessive external links (potential link farming)
+  const externalLinks = html.match(/<a[^>]*href\s*=\s*["']https?:\/\/[^"']*["'][^>]*>/gi) || [];
+  if (externalLinks.length > 10) {
+    issues.push(`Excessive external links (${externalLinks.length}) - possible link farming`);
+  }
+
+  return {
+    safe: issues.length === 0,
+    issues,
+    stats: {
+      forms: forms.length,
+      scripts: scripts.length,
+      externalLinks: externalLinks.length,
+      hiddenFields: hiddenInputs.length
+    }
+  };
+}
+
+async function fetchHtml(url) {
+  // Try multiple CORS proxies for better reliability
+  const proxies = [
+    'https://api.allorigins.win/raw?url=',
+    'https://cors-anywhere.herokuapp.com/',
+    'https://thingproxy.freeboard.io/fetch/'
+  ];
+
+  let lastError;
+
+  for (const proxy of proxies) {
+    try {
+      console.log(`Trying proxy: ${proxy}`);
+
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+      const response = await fetch(proxy + encodeURIComponent(url), {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const html = await response.text();
+
+      // Basic validation - check if we got actual HTML
+      if (html.length < 50 || !html.includes('<')) {
+        throw new Error('Invalid HTML response received');
+      }
+
+      console.log(`Successfully fetched ${html.length} characters from ${url}`);
+      return html;
+
+    } catch (error) {
+      console.warn(`Proxy ${proxy} failed:`, error.message);
+      lastError = error;
+      continue;
+    }
+  }
+
+  // If all proxies failed, provide helpful error message
+  throw new Error(
+    `Could not fetch webpage. This may be due to:\n` +
+    `• CORS restrictions on the target site\n` +
+    `• Network connectivity issues\n` +
+    `• Site blocking automated requests\n\n` +
+    `Try using "Paste HTML" mode instead by copying the page source manually.\n\n` +
+    `Technical details: ${lastError?.message || 'All proxy services failed'}`
+  );
+}
+
+// ────────────────────────────────────────────────
+// Event Listeners
+// ────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Tab switching
+  document.querySelectorAll('.mode-tabs button').forEach(btn => {
+    btn.addEventListener('click', () => showForm(btn.dataset.mode));
+  });
+
+  // URL form
+  forms.url.addEventListener('submit', e => {
+    e.preventDefault();
+    const url = forms.url.querySelector('input').value.trim();
+    const verdict = checkUrlSafety(url);
+
+    if (!verdict.safe) {
+      showResult(
+        verdict.issues.some(i => i.includes('Invalid')) ? 'error' : 'danger',
+        'Potentially dangerous URL',
+        verdict.issues.map(i => `• ${i}`).join('\n')
+      );
+    } else {
+      showResult('safe', 'This URL looks safe');
+    }
+  });
+
+  // HTML paste form
+  forms.html.addEventListener('submit', e => {
+    e.preventDefault();
+    const html = forms.html.querySelector('textarea').value.trim();
+    if (!html) return;
+
+    const analysis = analyzeHtmlContent(html);
+
+    showResult(
+      analysis.safe ? 'safe' : 'danger',
+      analysis.safe ? 'No clear phishing indicators found' : 'Potential phishing content detected',
+      analysis.safe ? '' : analysis.issues.map(i => `• ${i}`).join('\n')
+    );
+  });
+
+  // Full fetch form
+  forms.fetch.addEventListener('submit', async e => {
+    e.preventDefault();
+    const url = forms.fetch.querySelector('input').value.trim();
+    const btn = forms.fetch.querySelector('button');
+    const originalText = btn.textContent;
+
+    // Validate URL
+    if (!url) {
+      showResult('error', 'URL Required', 'Please enter a valid URL to scan.');
+      return;
+    }
+
+    // Basic URL validation
+    try {
+      new URL(url);
+    } catch {
+      showResult('error', 'Invalid URL', 'Please enter a valid URL starting with http:// or https://');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '🔍 Scanning…';
+    showResult('warning', '🔍 Scanning webpage...', 'Fetching content and analyzing for phishing indicators. This may take a few seconds.');
+
+    try {
+      // Show progress updates
+      const progressSteps = [
+        '🔗 Checking URL safety...',
+        '🌐 Fetching webpage content...',
+        '🔬 Analyzing HTML structure...',
+        '⚠️ Checking for suspicious patterns...',
+        '📊 Generating security report...'
+      ];
+
+      let stepIndex = 0;
+      const progressInterval = setInterval(() => {
+        if (stepIndex < progressSteps.length) {
+          showResult('warning', '🔍 Scanning webpage...', progressSteps[stepIndex]);
+          stepIndex++;
+        }
+      }, 800);
+
+      // Perform analysis
+      const [urlVerdict, html] = await Promise.all([
+        Promise.resolve(checkUrlSafety(url)),
+        fetchHtml(url)
+      ]);
+
+      clearInterval(progressInterval);
+
+      // Analyze content
+      showResult('warning', '🔍 Scanning webpage...', '🔬 Analyzing HTML structure...');
+      const contentVerdict = analyzeHtmlContent(html);
+
+      // Prepare results
+      let type = 'safe';
+      let title = '✅ No phishing indicators detected';
+      let details = `Successfully analyzed ${html.length.toLocaleString()} characters of HTML content.\n\n`;
+      details += `📊 Content Statistics:\n`;
+      details += `  • Forms: ${contentVerdict.stats.forms}\n`;
+      details += `  • Scripts: ${contentVerdict.stats.scripts}\n`;
+      details += `  • External Links: ${contentVerdict.stats.externalLinks}\n`;
+      details += `  • Hidden Fields: ${contentVerdict.stats.hiddenFields}\n\n`;
+
+      const allIssues = [];
+
+      if (!urlVerdict.safe) {
+        allIssues.push('🚨 URL Security Issues:');
+        urlVerdict.issues.forEach(issue => allIssues.push(`  • ${issue}`));
+        allIssues.push('');
+      }
+
+      if (!contentVerdict.safe) {
+        allIssues.push('🚨 Content Security Issues:');
+        contentVerdict.issues.forEach(issue => allIssues.push(`  • ${issue}`));
+        allIssues.push('');
+      }
+
+      if (allIssues.length > 0) {
+        type = 'danger';
+        title = '🚨 Potential phishing detected!';
+        details += allIssues.join('\n');
+        details += '\n⚠️ Exercise caution when visiting this site.';
+      } else {
+        details += '✅ URL structure appears safe\n';
+        details += '✅ Content analysis found no suspicious patterns\n';
+        details += '✅ No urgent language or credential harvesting detected\n\n';
+        details += 'ℹ️ Note: This analysis covers basic phishing indicators. Advanced threats may not be detected.';
+      }
+
+      showResult(type, title, details);
+
+    } catch (err) {
+      console.error('Full page scan error:', err);
+      showResult('error', '❌ Scan Failed',
+        `Could not complete the webpage scan.\n\n${err.message}\n\n` +
+        '💡 Suggestions:\n' +
+        '• Try "Paste HTML" mode by copying the page source manually\n' +
+        '• Check if the website allows automated access\n' +
+        '• Ensure the URL is accessible and not behind a login\n' +
+        '• Some sites block CORS requests for security reasons'
+      );
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  });
+
+  // Start with URL mode
+  showForm('url');
+});
+</script>
+
+</body>
+</html>
