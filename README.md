@@ -27,7 +27,6 @@ cd Amitrepo
 | Analysis Mode | Description | Use Case |
 |---------------|-------------|----------|
 | **URL Analysis** | Lightning-fast URL pattern recognition | Quick security checks |
-| **HTML Content Scan** | Deep source code analysis | Manual webpage inspection |
 | **Full Webpage Scan** | Automated live website crawling | Comprehensive threat assessment |
 
 ### 🛡️ **Advanced Detection Capabilities**
@@ -55,17 +54,15 @@ cd Amitrepo
 graph TD
     A[User Input] --> B{Analysis Mode}
     B -->|URL Only| C[URL Pattern Analysis]
-    B -->|HTML Source| D[Content Deep Scan]
-    B -->|Live Website| E[CORS Proxy Fetch]
+    B -->|Live Website| D[CORS Proxy Fetch]
 
-    C --> F[Heuristic Engine]
-    D --> F
-    E --> G[Webpage Content]
-    G --> F
+    C --> E[Heuristic Engine]
+    D --> F[Webpage Content]
+    F --> E
 
-    F --> H[Threat Classification]
-    H --> I[Risk Assessment]
-    I --> J[Detailed Report]
+    E --> G[Threat Classification]
+    G --> H[Risk Assessment]
+    H --> I[Detailed Report]
 ```
 
 ## 🏆 What Sets This Apart
@@ -92,14 +89,7 @@ While most phishing detectors stop at URL validation, our suite performs **compr
 3. Click **"Check URL"**
 4. Review instant threat assessment
 
-### Method 2: HTML Content Analysis (Manual Inspection)
-1. Switch to **"Paste HTML"** mode
-2. Copy webpage source code from browser developer tools
-3. Paste into the analysis textarea
-4. Click **"Analyze Webpage"**
-5. Examine detailed security findings
-
-### Method 3: Full Webpage Scan (Automated)
+### Method 2: Full Webpage Scan (Automated)
 1. Choose **"Full Webpage Scan"** mode
 2. Input target URL: `https://suspicious-site.com`
 3. Click **"Scan Full Webpage"**

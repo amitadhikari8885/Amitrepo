@@ -153,7 +153,6 @@
 
     <div class="mode-selector">
       <button id="urlMode" class="active">URL Analysis</button>
-      <button id="webpageMode">Paste HTML</button>
       <button id="fullScanMode">Full Webpage Scan</button>
     </div>
 
@@ -164,15 +163,6 @@
       </div>
 
       <button type="submit">Check URL</button>
-    </form>
-
-    <form id="webpageForm" style="display: none;">
-      <div class="form-group">
-        <label for="htmlContent">Paste Webpage HTML Source</label>
-        <textarea id="htmlContent" placeholder="Paste the HTML source code of the suspicious webpage here..." required></textarea>
-      </div>
-
-      <button type="submit">Analyze Webpage</button>
     </form>
 
     <form id="fullScanForm" style="display: none;">
@@ -188,41 +178,25 @@
 
   <script>
     const urlForm = document.getElementById('urlForm');
-    const webpageForm = document.getElementById('webpageForm');
     const fullScanForm = document.getElementById('fullScanForm');
     const resultDiv = document.getElementById('result');
     const urlModeBtn = document.getElementById('urlMode');
-    const webpageModeBtn = document.getElementById('webpageMode');
     const fullScanModeBtn = document.getElementById('fullScanMode');
 
     // Mode switching
     urlModeBtn.addEventListener('click', () => {
       urlForm.style.display = 'block';
-      webpageForm.style.display = 'none';
       fullScanForm.style.display = 'none';
       urlModeBtn.classList.add('active');
-      webpageModeBtn.classList.remove('active');
-      fullScanModeBtn.classList.remove('active');
-      resultDiv.style.display = 'none';
-    });
-
-    webpageModeBtn.addEventListener('click', () => {
-      urlForm.style.display = 'none';
-      webpageForm.style.display = 'block';
-      fullScanForm.style.display = 'none';
-      webpageModeBtn.classList.add('active');
-      urlModeBtn.classList.remove('active');
       fullScanModeBtn.classList.remove('active');
       resultDiv.style.display = 'none';
     });
 
     fullScanModeBtn.addEventListener('click', () => {
       urlForm.style.display = 'none';
-      webpageForm.style.display = 'none';
       fullScanForm.style.display = 'block';
       fullScanModeBtn.classList.add('active');
       urlModeBtn.classList.remove('active');
-      webpageModeBtn.classList.remove('active');
       resultDiv.style.display = 'none';
     });
 
@@ -394,24 +368,6 @@
       }
     });
 
-    webpageForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-
-      const htmlContent = document.getElementById('htmlContent').value.trim();
-      const analysis = analyzeWebpageContent(htmlContent);
-
-      resultDiv.style.display = 'block';
-
-      if (analysis.isSafe) {
-        resultDiv.className = 'result safe';
-        resultDiv.textContent = '✓ This webpage content appears to be safe.';
-      } else {
-        resultDiv.className = 'result phishing';
-        resultDiv.textContent = `⚠️ Potential phishing detected:\n• ${analysis.reasons.join('\n• ')}`;
-        resultDiv.style.whiteSpace = 'pre-line';
-      }
-    });
-
     fullScanForm.addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -464,7 +420,7 @@
 
       } catch (error) {
         resultDiv.className = 'result phishing';
-        resultDiv.textContent = `⚠️ Error scanning webpage: ${error.message}\n\nThis may occur due to:\n• CORS restrictions\n• Site blocking automated requests\n• Network issues\n• Invalid URL\n\nTry using "Paste HTML" mode instead.`;
+        resultDiv.textContent = `⚠️ Error scanning webpage: ${error.message}\n\nThis may occur due to:\n• CORS restrictions\n• Site blocking automated requests\n• Network issues\n• Invalid URL`;
         resultDiv.style.whiteSpace = 'pre-line';
       } finally {
         // Reset button
