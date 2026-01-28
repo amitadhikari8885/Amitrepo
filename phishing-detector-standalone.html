@@ -324,7 +324,10 @@
         <input type="url" id="fetchUrl" placeholder="https://example-suspicious-site.com" required autocomplete="off"/>
         <small class="help-text">Enter the full URL of the webpage you want to analyze for phishing indicators</small>
       </div>
-      <button type="submit">🚀 Fetch & Analyze</button>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <button type="submit">🚀 Fetch & Analyze</button>
+        <button type="button" onclick="showManualFetchInstructions(document.getElementById('fetchUrl').value.trim() || 'https://example.com')" style="background: #6b7280; padding: 12px 16px; border: none; border-radius: 8px; color: white; font-size: 0.9rem; cursor: pointer;">📋 Manual Mode</button>
+      </div>
       <div class="info-box">
         <h4>ℹ️ How Full Page Scan Works</h4>
         <ul>
@@ -334,8 +337,9 @@
           <li>Uses risk scoring to identify high-confidence threats</li>
           <li><strong>Selective detection</strong> - only flags clear phishing attempts</li>
         </ul>
-        <p><strong>Note:</strong> This detector focuses on obvious phishing threats rather than flagging legitimate websites. Many sites block automated requests for security.</p>
-        <p><strong>🔧 Troubleshooting:</strong> If fetching fails, try "Paste HTML" mode. For debugging, open browser console (F12) and run <code>testFetch()</code></p>
+        <p><strong>⚠️ Important:</strong> Most websites block automated requests for security. If fetching fails, use "Paste HTML" mode instead.</p>
+        <p><strong>🔧 Quick Manual Method:</strong> Open website → Ctrl+U (View Source) → Copy All → Paste here</p>
+        <p><strong>🔧 For debugging:</strong> Open browser console (F12) and run <code>testFetch()</code></p>
         <p><strong>Keyboard shortcuts:</strong> Ctrl+1 (URL), Ctrl+2 (HTML), Ctrl+3 (Full Scan), Ctrl+Enter (Submit)</p>
       </div>
     </form>
@@ -659,20 +663,39 @@ async function fetchHtml(url) {
 
   // Try multiple CORS proxies for better reliability
   const proxies = [
+    // Most reliable proxies first
     'https://api.allorigins.win/raw?url=',
     'https://cors-anywhere.herokuapp.com/',
     'https://thingproxy.freeboard.io/fetch/',
     'https://api.codetabs.com/v1/proxy?quest=',
+    'https://corsproxy.org/?',
     'https://proxy.cors.sh/',
-    'https://corsproxy.org/?'
+
+    // Additional services
+    'https://cors-anywhere.herokuapp.com/',
+    'https://api.allorigins.win/get?url=',
+    'https://jsonp.afeld.me/?url=',
+    'https://corsproxy.io/?',
+    'https://cors.bridged.cc/',
+    'https://api.allorigins.win/raw?url=',
+    'https://corsproxy.org/?',
+
+    // Last resort - try different formats
+    'https://cors-anywhere.herokuapp.com/',
+    'https://thingproxy.freeboard.io/fetch/'
   ];
 
   let lastError;
   let lastResponse;
 
-  for (const proxy of proxies) {
+  for (const [index, proxy] of proxies.entries()) {
     try {
-      console.log(`Trying proxy: ${proxy}`);
+      // Add delay between attempts to avoid rate limiting
+      if (index > 0) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      console.log(`🔄 Trying proxy ${index + 1}/${proxies.length}: ${proxy}`);
 
       // Add timeout to prevent hanging
       const controller = new AbortController();
@@ -763,34 +786,79 @@ async function fetchHtml(url) {
   }
 
   // If all proxies failed, provide detailed error message
-  let errorMessage = `Could not fetch webpage from any proxy service.\n\n`;
+  let errorMessage = `❌ Could not fetch webpage from any proxy service.\n\n`;
 
-  if (lastResponse) {
-    errorMessage += `Last response status: ${lastResponse.status} ${lastResponse.statusText}\n`;
-  }
+  errorMessage += `🔍 Troubleshooting Steps:\n\n`;
 
-  errorMessage += `Possible reasons:\n`;
-  errorMessage += `• Website blocks automated requests (most common)\n`;
-  errorMessage += `• CORS restrictions prevent cross-origin access\n`;
-  errorMessage += `• Website requires JavaScript to load content\n`;
-  errorMessage += `• All proxy services are temporarily unavailable\n`;
-  errorMessage += `• Network connectivity issues\n\n`;
+  errorMessage += `1️⃣ **Try "Paste HTML" Mode Instead:**\n`;
+  errorMessage += `   • Open the website in your browser\n`;
+  errorMessage += `   • Right-click → "View Page Source" (Ctrl+U)\n`;
+  errorMessage += `   • Copy all the HTML content\n`;
+  errorMessage += `   • Paste it in the "HTML Paste" mode above\n\n`;
 
-  errorMessage += `💡 Solutions:\n`;
-  errorMessage += `• Try "Paste HTML" mode by copying the page source manually\n`;
-  errorMessage += `• Use browser developer tools (F12) → Network tab → copy response\n`;
-  errorMessage += `• Try again later if proxy services are down\n\n`;
+  errorMessage += `2️⃣ **Browser Developer Tools Method:**\n`;
+  errorMessage += `   • Open website in browser\n`;
+  errorMessage += `   • Press F12 to open Developer Tools\n`;
+  errorMessage += `   • Go to Network tab\n`;
+  errorMessage += `   • Refresh the page\n`;
+  errorMessage += `   • Right-click the main HTML request\n`;
+  errorMessage += `   • Copy → Copy response\n`;
+  errorMessage += `   • Paste in "HTML Paste" mode\n\n`;
+
+  errorMessage += `3️⃣ **Alternative Solutions:**\n`;
+  errorMessage += `   • Try a different URL\n`;
+  errorMessage += `   • Use a VPN if the site blocks your region\n`;
+  errorMessage += `   • Try again later (temporary blocking)\n`;
+  errorMessage += `   • Use browser extensions like CORS Unblock\n\n`;
+
+  errorMessage += `💡 **Why this happens:** Most websites block automated requests for security. This is normal behavior and protects against bots and scrapers.\n\n`;
 
   if (lastError) {
-    errorMessage += `Technical details: ${lastError.message}`;
+    errorMessage += `🔧 **Technical Details:** ${lastError.message}`;
   }
 
   throw new Error(errorMessage);
 }
 
 // ────────────────────────────────────────────────
-// Debug/Test Functions (call from browser console)
+// Manual Fetch Helper
 // ────────────────────────────────────────────────
+
+function showManualFetchInstructions(url) {
+  const instructions = `
+🎯 **Manual HTML Fetch Instructions**
+
+Since automated fetching failed, here's how to get the HTML manually:
+
+**Method 1: View Page Source (Easiest)**
+1. Open this URL in a new browser tab: ${url}
+2. Press Ctrl+U (or right-click → View Page Source)
+3. Press Ctrl+A to select all text
+4. Press Ctrl+C to copy
+5. Come back here and paste in the "HTML Paste" field above
+6. Click "Analyze HTML"
+
+**Method 2: Browser Developer Tools**
+1. Open URL in browser: ${url}
+2. Press F12 to open Developer Tools
+3. Click "Network" tab
+4. Refresh the page (F5)
+5. Click the first HTML request (usually the domain name)
+6. Right-click → Copy → Copy response
+7. Paste in "HTML Paste" field above
+
+**Method 3: Save Page As**
+1. Open URL in browser: ${url}
+2. Press Ctrl+S (Save Page As)
+3. Save as "Webpage, HTML only"
+4. Open the saved .html file in a text editor
+5. Copy all content and paste here
+
+This manual method works 100% of the time and gives you full control!
+  `;
+
+  showResult('warning', '🔧 Manual Fetch Required', instructions);
+}
 
 // Test fetch functionality
 window.testFetch = async function(url = 'https://httpbin.org/html') {
@@ -1076,17 +1144,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     } catch (err) {
       console.error('Full page scan error:', err);
-      showResult('error', '❌ Scan Failed',
-        `Could not complete the webpage scan.\n\n${err.message}\n\n` +
-        '💡 Suggestions:\n' +
-        '• Try "Paste HTML" mode by copying the page source manually\n' +
-        '• Use browser developer tools (F12) → Network tab → copy response\n' +
-        '• Check if the website is accessible in your browser\n' +
-        '• Some sites block CORS requests for security reasons\n' +
-        '• Try a different URL or try again later\n\n' +
-        '🔧 For debugging: Check browser console (F12) for detailed error logs.'
-      );
-    } finally {
+
+      // Show manual fetch instructions as primary solution
+      showManualFetchInstructions(forms.fetch.querySelector('input').value.trim());
+
+      // Also show technical error details
+      setTimeout(() => {
+        showResult('error', '❌ Automated Scan Failed',
+          `Could not complete the automated webpage scan.\n\n${err.message}\n\n` +
+          '✅ **Solution above shows how to fetch manually** - this method works reliably!\n\n' +
+          '🔧 For debugging: Check browser console (F12) for detailed error logs.'
+        );
+      }, 2000); // Show after manual instructions
       btn.textContent = originalText;
       btn.disabled = false;
     }

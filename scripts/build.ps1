@@ -15,7 +15,7 @@ New-Item -ItemType Directory -Force -Path "dist" | Out-Null
 Copy-Item -Recurse "src" "dist/src"
 
 # Copy main HTML file
-Copy-Item "phishing-detector.html" "dist/index.html"
+Copy-Item "phishing-detector-standalone.html" "dist/index.html"
 
 # Copy demo files (if they exist)
 if (Test-Path "index.html") {
